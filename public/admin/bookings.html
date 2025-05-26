@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlyViet Admin - Quản lý Đặt vé</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .sidebar {
+            height: 100vh;
+            background-color: #212529;
+            color: white;
+            position: fixed;
+            left: 0;
+        }
+        .nav-link {
+            color: rgba(255,255,255,.75);
+        }
+        .nav-link:hover, .nav-link.active {
+            color: white;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: static;
+                height: auto;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+        #loading-spinner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .badge-pill {
+            border-radius: 20px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-spinner">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Đang tải...</span>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center py-4">
+                        <h4>FlyViet Admin</h4>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html">
+                                <i class="fas fa-plane me-2"></i>
+                                Quản lý Chuyến bay
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="bookings.html">
+                                <i class="fas fa-ticket-alt me-2"></i>
+                                Quản lý Đặt vé
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="promotions.html">
+                                <i class="fas fa-tag me-2"></i>
+                                Quản lý Khuyến mãi
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="statistics.html">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Thống kê & Báo cáo
+                            </a>
+                        </li>
+                        <li class="nav-item mt-5">
+                            <a class="nav-link" href="/">
+                                <i class="fas fa-sign-out-alt me-2"></i>
+                                Đăng xuất
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Quản lý Đặt vé</h1>
+                </div>
+
+                <!-- Filter section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Tìm kiếm & Lọc</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="filter-form" class="row g-3">
+                            <div class="col-md-4">
+                                <label for="filter-booking-id" class="form-label">Mã đặt vé</label>
+                                <input type="text" class="form-control" id="filter-booking-id" placeholder="Nhập mã đặt vé">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="filter-contact-name" class="form-label">Tên người đặt</label>
+                                <input type="text" class="form-control" id="filter-contact-name" placeholder="Nhập tên người đặt">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="filter-payment-status" class="form-label">Trạng thái thanh toán</label>
+                                <select id="filter-payment-status" class="form-select">
+                                    <option value="">Tất cả</option>
+                                    <option value="unpaid">Chờ xác nhận</option>
+                                    <option value="paid">Đã thanh toán</option>
+                                    <!-- <option value="refunded">Hoàn tiền</option>
+                                    <option value="cancelled">Đã hủy</option> -->
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="filter-from-date" class="form-label">Từ ngày</label>
+                                <input type="date" class="form-control" id="filter-from-date">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="filter-to-date" class="form-label">Đến ngày</label>
+                                <input type="date" class="form-control" id="filter-to-date">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>Tìm kiếm
+                                </button>
+                                <button type="button" id="reset-filter" class="btn btn-outline-secondary ms-2">
+                                    <i class="fas fa-redo me-2"></i>Đặt lại
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Bookings table -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Mã đặt vé</th>
+                                        <th>Người đặt</th>
+                                        <th>Loại vé</th>
+                                        <th>Chuyến bay</th>
+                                        <th>Ngày đặt</th>
+                                        <th>Số hành khách</th>
+                                        <th>Hạng vé</th>
+                                        <th>Tổng tiền</th>
+                                        <th>Trạng thái</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="booking-table-body">
+                                    <!-- Booking data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div>
+                                <span id="total-bookings">0</span> đơn đặt vé
+                            </div>
+                            <nav aria-label="Phân trang">
+                                <ul class="pagination" id="pagination">
+                                    <!-- Pagination will be populated here -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Details Modal -->
+    <div class="modal fade" id="booking-details-modal" tabindex="-1" aria-labelledby="booking-details-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="booking-details-modal-label">Chi tiết đặt vé</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Thông tin đặt vé</h5>
+                            <table class="table">
+                                <tr>
+                                    <th width="40%">Mã đặt vé:</th>
+                                    <td id="detail-booking-id"></td>
+                                </tr>
+                                <tr>
+                                    <th>Ngày đặt:</th>
+                                    <td id="detail-booking-date"></td>
+                                </tr>
+                                <tr>
+                                    <th>Loại vé:</th>
+                                    <td id="detail-trip-type"></td>
+                                </tr>
+                                <tr>
+                                    <th>Người đặt:</th>
+                                    <td id="detail-contact-name"></td>
+                                </tr>
+                                <tr>
+                                    <th>Email:</th>
+                                    <td id="detail-email"></td>
+                                </tr>
+                                <tr>
+                                    <th>Số điện thoại:</th>
+                                    <td id="detail-phone"></td>
+                                </tr>
+                                <tr>
+                                    <th>Mã khuyến mãi:</th>
+                                    <td id="detail-promo-code"></td>
+                                </tr>
+                                <tr>
+                                    <th>Tổng tiền:</th>
+                                    <td id="detail-total-amount"></td>
+                                </tr>
+                                <tr>
+                                    <th>Trạng thái thanh toán:</th>
+                                    <td id="detail-payment-status"></td>
+                                </tr>
+                                <tr>
+                                    <th>Phương thức thanh toán:</th>
+                                    <td id="detail-payment-method"></td>
+                                </tr>
+                                <tr>
+                                    <th>Thông tin giao dịch:</th>
+                                    <td id="detail-transaction-info"></td>
+                                </tr>
+                                <tr>
+                                    <th>Chi tiết hành khách:</th>
+                                    <td id="detail-passenger-counts">
+                                        <div class="passenger-type-counts">
+                                            <span class="badge bg-primary me-1" id="adult-count">0 người lớn</span>
+                                            <span class="badge bg-info me-1" id="child-count">0 trẻ em</span>
+                                            <span class="badge bg-secondary" id="infant-count">0 em bé</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Thông tin chuyến bay đi</h5>
+                            <table class="table">
+                                <tr>
+                                    <th width="40%">Mã chuyến bay:</th>
+                                    <td id="detail-flight-id"></td>
+                                </tr>
+                                <tr>
+                                    <th>Hãng bay:</th>
+                                    <td id="detail-airline"></td>
+                                </tr>
+                                <tr>
+                                    <th>Điểm khởi hành:</th>
+                                    <td id="detail-departure"></td>
+                                </tr>
+                                <tr>
+                                    <th>Điểm đến:</th>
+                                    <td id="detail-destination"></td>
+                                </tr>
+                                <tr>
+                                    <th>Ngày bay:</th>
+                                    <td id="detail-flight-date"></td>
+                                </tr>
+                                <tr>
+                                    <th>Giờ khởi hành:</th>
+                                    <td id="detail-departure-time"></td>
+                                </tr>
+                                <tr>
+                                    <th>Giờ đến:</th>
+                                    <td id="detail-arrival-time"></td>
+                                </tr>
+                                <tr>
+                                    <th>Hạng vé:</th>
+                                    <td id="detail-travel-class"></td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Return flight details (only shown for round-trip bookings) -->
+                            <div id="return-flight-details" style="display: none;">
+                                <h5 class="mt-4">Thông tin chuyến bay về</h5>
+                                <table class="table">
+                                    <tr>
+                                        <th width="40%">Mã chuyến bay:</th>
+                                        <td id="detail-return-flight-id"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Hãng bay:</th>
+                                        <td id="detail-return-airline"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Điểm khởi hành:</th>
+                                        <td id="detail-return-departure"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Điểm đến:</th>
+                                        <td id="detail-return-destination"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Ngày bay:</th>
+                                        <td id="detail-return-flight-date"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Giờ khởi hành:</th>
+                                        <td id="detail-return-departure-time"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Giờ đến:</th>
+                                        <td id="detail-return-arrival-time"></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h5>Danh sách hành khách</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Họ tên</th>
+                                    <th>Giới tính</th>
+                                    <th>Ngày sinh</th>
+                                    <th>Số hộ chiếu</th>
+                                    <th>Hành lý</th>
+                                    <th>Bảo hiểm</th>
+                                    <th>Suất ăn</th>
+                                    <th>Loại hành khách</th>
+                                </tr>
+                            </thead>
+                            <tbody id="passenger-list">
+                                <!-- Passenger data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Phần thông báo về việc gán ghế đã được loại bỏ -->
+                    
+                    <div class="mt-4">
+                        <h5>Cập nhật trạng thái thanh toán</h5>
+                        <div class="d-flex">
+                            <select id="update-payment-status" class="form-select me-2" style="max-width: 200px;">
+                                <option value="unpaid">Chờ xác nhận</option>
+                                <option value="paid">Đã thanh toán</option>
+                                <!-- <option value="refunded">Hoàn tiền</option>
+                                <option value="cancelled">Đã hủy</option> -->
+                            </select>
+                            <button id="save-payment-status" class="btn btn-primary">Cập nhật</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" id="print-booking">In vé</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="bookings.js"></script>
+</body>
+</html> 

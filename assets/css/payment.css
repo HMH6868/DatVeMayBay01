@@ -1,0 +1,347 @@
+/* Payment page specific styles */
+.payment-container {
+    padding: 50px 0; /* Increased padding */
+}
+
+.payment-card {
+    background-color: white;
+    border-radius: 12px; /* More rounded corners */
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); /* Softer, larger shadow */
+    padding: 40px; /* Increased padding */
+    margin-bottom: 40px; /* Increased margin */
+}
+
+.payment-title {
+    text-align: center;
+    margin-bottom: 50px; /* Increased margin */
+}
+
+.payment-title h2 {
+    font-size: 2.2rem; /* Adjusted size */
+    margin-bottom: 15px; /* Increased margin */
+    color: #343a40;
+}
+
+.payment-title p {
+    color: #6c757d;
+    font-size: 1.1rem; /* Slightly larger */
+}
+
+.payment-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px; /* Increased gap */
+}
+
+.payment-main {
+    flex: 1;
+    min-width: 0; /* Allow shrinking */
+}
+
+.payment-sidebar {
+    width: 380px; /* Slightly wider sidebar */
+}
+
+.order-summary {
+    background-color: #f8f9fa; /* Light gray background */
+    border-radius: 8px;
+    padding: 30px; /* Increased padding */
+    margin-bottom: 30px;
+    border: 1px solid #e9ecef; /* Subtle border */
+}
+
+.summary-title {
+    font-size: 1.3rem; /* Larger title */
+    margin-bottom: 25px; /* Increased margin */
+    padding-bottom: 15px; /* Increased padding */
+    border-bottom: 1px solid #dee2e6;
+    color: #343a40;
+}
+
+.summary-content {
+    margin-bottom: 25px; /* Increased margin */
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 18px; /* Increased margin */
+    font-size: 1rem; /* Standardized font size */
+}
+
+.summary-item span:first-child {
+    color: #495057; /* Darker gray for item names */
+}
+.summary-item span:last-child {
+    font-weight: 600; /* Bolder for item values */
+    color: #343a40;
+}
+
+.summary-item.total {
+    margin-top: 25px; /* Increased margin */
+    padding-top: 20px; /* Increased padding */
+    border-top: 2px solid #dee2e6; /* Thicker border */
+    font-weight: 700;
+    font-size: 1.4rem; /* Larger total */
+    color: #0d6efd;
+}
+
+.payment-amount {
+    margin-bottom: 40px;
+    text-align: center;
+    font-size: 2rem; /* Adjusted size */
+    font-weight: 700;
+    color: #0d6efd;
+    background-color: #e7f1ff; /* Light blue background */
+    padding: 20px; /* Added padding */
+    border-radius: 8px;
+}
+
+.payment-methods {
+    margin-bottom: 40px; /* Increased margin */
+}
+
+.payment-methods h3 {
+    font-size: 1.5rem; /* Larger heading */
+    margin-bottom: 25px; /* Increased margin */
+    padding-bottom: 15px; /* Increased padding */
+    border-bottom: 1px solid #dee2e6;
+    color: #343a40;
+}
+
+.method-tabs {
+    display: grid; /* Use grid for better alignment */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Responsive columns */
+    gap: 15px; /* Increased gap */
+    margin-bottom: 35px; /* Increased margin */
+}
+
+.method-tab {
+    padding: 20px 15px; /* Adjusted padding */
+    text-align: center;
+    border: 2px solid #e9ecef; /* Thicker, lighter border */
+    border-radius: 8px; /* More rounded */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.method-tab:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15); /* Subtle shadow on hover */
+    transform: translateY(-2px); /* Slight lift on hover */
+}
+
+.method-tab.active {
+    border-color: #0d6efd;
+    background-color: #e7f1ff; /* Light blue for active */
+    color: #0d6efd;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+}
+
+.method-tab i {
+    font-size: 28px; /* Larger icon */
+    margin-bottom: 12px; /* Increased margin */
+    display: block;
+    color: #0d6efd; /* Icon color */
+}
+.method-tab.active i {
+    color: #0d6efd; /* Ensure icon color remains in active state */
+}
+.method-tab div {
+    font-weight: 600; /* Bolder text */
+    font-size: 0.95rem;
+}
+
+.payment-form {
+    margin-bottom: 30px;
+    padding: 25px; /* Add padding to form sections */
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background-color: #fdfdff; /* Very light background for forms */
+}
+
+.form-section {
+    margin-bottom: 35px; /* Increased margin */
+}
+
+.form-section h4 {
+    font-size: 1.25rem; /* Larger heading */
+    margin-bottom: 25px; /* Increased margin */
+    color: #495057;
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px; /* Increased gap */
+    margin-bottom: 25px; /* Increased margin */
+}
+
+.form-col {
+    flex: 1;
+    min-width: 220px; /* Adjusted min-width */
+}
+
+.form-group {
+    margin-bottom: 25px; /* Increased margin */
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px; /* Increased margin */
+    font-weight: 600; /* Bolder label */
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 14px; /* Increased padding */
+    border: 1px solid #ced4da;
+    border-radius: 6px; /* More rounded */
+    font-size: 1rem; /* Standardized font size */
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.form-group input:focus, .form-group select:focus {
+    border-color: #80bdff; /* Highlight on focus */
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.required:after {
+    content: " *";
+    color: #dc3545;
+}
+
+.card-icons {
+    display: flex;
+    gap: 15px; /* Increased gap */
+    margin-bottom: 25px; /* Increased margin */
+    align-items: center;
+}
+
+.card-icon {
+    width: 50px; /* Larger icon container */
+    height: 32px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px; /* Icon size */
+    color: #0d6efd; /* Default icon color */
+}
+.card-icon.fa-cc-visa { color: #1A1F71;}
+.card-icon.fa-cc-mastercard { color: #EB001B;}
+.card-icon.fa-cc-amex { color: #0077A6;}
+.card-icon.fa-cc-jcb { color: #003A70;} /* JCB has various colors, using a common one */
+
+.card-icon img { /* Remove if using FontAwesome exclusively */
+    display: none; /* Hide img if using FontAwesome */
+}
+
+.secure-payment {
+    margin-top: 25px; /* Increased margin */
+    padding: 20px; /* Increased padding */
+    background-color: #e6f7ff; /* Lighter blue */
+    border-radius: 6px; /* More rounded */
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Increased gap */
+    border-left: 4px solid #0d6efd; /* Accent border */
+}
+
+.secure-payment i {
+    font-size: 28px; /* Larger icon */
+    color: #0d6efd; /* Blue icon */
+}
+
+.secure-payment p {
+    font-size: 0.95rem; /* Adjusted font size */
+    color: #495057;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Align items vertically */
+    margin-top: 40px; /* Increased margin */
+    gap: 20px; /* Add gap between buttons */
+}
+
+.btn-back, .btn-payment { /* Common styling for buttons */
+    display: inline-flex; /* Use flex for icon alignment if needed */
+    align-items: center;
+    justify-content: center;
+    padding: 14px 28px; /* Increased padding */
+    border: none;
+    border-radius: 6px; /* More rounded */
+    font-size: 1rem; /* Standardized font size */
+    font-weight: 600; /* Bolder text */
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.2s;
+    text-align: center;
+}
+
+.btn-back {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-back:hover {
+    background-color: #5a6268;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transform: translateY(-1px);
+}
+
+.btn-payment {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.btn-payment:hover {
+    background-color: #0b5ed7;
+    box-shadow: 0 2px 8px rgba(13,110,253,0.25);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 992px) {
+    .payment-main {
+        min-width: 100%;
+        order: 2;
+    }
+
+    .payment-sidebar {
+        width: 100%;
+        order: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .method-tabs {
+        flex-direction: column;
+    }
+
+    .method-tab {
+        width: 100%;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .btn-back, .btn-payment {
+        width: 100%;
+        text-align: center;
+    }
+}

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlyViet Admin - Quản lý Chuyến bay</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .sidebar {
+            height: 100vh;
+            background-color: #212529;
+            color: white;
+            position: fixed;
+            left: 0;
+        }
+        .nav-link {
+            color: rgba(255,255,255,.75);
+        }
+        .nav-link:hover, .nav-link.active {
+            color: white;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: static;
+                height: auto;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+        #loading-spinner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-spinner">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Đang tải...</span>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center py-4">
+                        <h4>FlyViet Admin</h4>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#">
+                                <i class="fas fa-plane me-2"></i>
+                                Quản lý Chuyến bay
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="./bookings.html">
+                                <i class="fas fa-ticket-alt me-2"></i>
+                                Quản lý Đặt vé
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="./promotions.html">
+                                <i class="fas fa-tag me-2"></i>
+                                Quản lý Khuyến mãi
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="./statistics.html">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Thống kê & Báo cáo
+                            </a>
+                        </li>
+                        <li class="nav-item mt-5">
+                            <a class="nav-link" href="/">
+                                <i class="fas fa-sign-out-alt me-2"></i>
+                                Đăng xuất
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Quản lý Chuyến bay</h1>
+                    <button class="btn btn-primary" id="add-flight-btn">
+                        <i class="fas fa-plus me-2"></i>Thêm chuyến bay
+                    </button>
+                </div>
+
+                <!-- Filter section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Tìm kiếm & Lọc</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="filter-form" class="row g-3">
+                            <div class="col-md-3">
+                                <label for="filter-departure" class="form-label">Điểm khởi hành</label>
+                                <select id="filter-departure" class="form-select">
+                                    <option value="">Tất cả</option>
+                                    <option value="HAN">Hà Nội (HAN)</option>
+                                    <option value="SGN">Hồ Chí Minh (SGN)</option>
+                                    <option value="DAD">Đà Nẵng (DAD)</option>
+                                    <option value="CXR">Nha Trang (CXR)</option>
+                                    <option value="PQC">Phú Quốc (PQC)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="filter-destination" class="form-label">Điểm đến</label>
+                                <select id="filter-destination" class="form-select">
+                                    <option value="">Tất cả</option>
+                                    <option value="HAN">Hà Nội (HAN)</option>
+                                    <option value="SGN">Hồ Chí Minh (SGN)</option>
+                                    <option value="DAD">Đà Nẵng (DAD)</option>
+                                    <option value="CXR">Nha Trang (CXR)</option>
+                                    <option value="PQC">Phú Quốc (PQC)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="filter-date" class="form-label">Ngày khởi hành</label>
+                                <input type="date" class="form-control" id="filter-date">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="filter-status" class="form-label">Trạng thái</label>
+                                <select id="filter-status" class="form-select">
+                                    <option value="">Tất cả</option>
+                                    <option value="scheduled">Đã lên lịch</option>
+                                    <option value="boarding">Đang lên máy bay</option>
+                                    <option value="departed">Đã khởi hành</option>
+                                    <option value="arrived">Đã đến nơi</option>
+                                    <option value="cancelled">Đã hủy</option>
+                                    <option value="delayed">Bị hoãn</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>Tìm kiếm
+                                </button>
+                                <button type="button" id="reset-filter" class="btn btn-outline-secondary ms-2">
+                                    <i class="fas fa-redo me-2"></i>Đặt lại
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Flight table -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Hãng bay</th>
+                                        <th>Chuyến bay</th>
+                                        <th>Điểm đi</th>
+                                        <th>Điểm đến</th>
+                                        <th>Ngày bay</th>
+                                        <th>Thời gian khởi hành</th>
+                                        <th>Thời gian đến</th>
+                                        <th>Giá vé</th>
+                                        <th>Hạng ghế</th>
+                                        <th>Chỗ trống</th>
+                                        <th>Trạng thái</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="flight-table-body">
+                                    <!-- Flight data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mt-3">
+                            <div class="mb-2 mb-md-0">
+                                <span id="total-flights">0</span> chuyến bay
+                            </div>
+                            <nav aria-label="Phân trang" class="overflow-auto" style="max-width: 100%;">
+                                <ul class="pagination pagination-sm flex-wrap" id="pagination">
+                                    <!-- Pagination will be populated here -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flight Modal -->
+    <div class="modal fade" id="flight-modal" tabindex="-1" aria-labelledby="flight-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="flight-modal-label">Thêm chuyến bay mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="flight-form">
+                        <input type="hidden" id="flight-id">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="airline" class="form-label">Hãng bay</label>
+                                <input type="text" class="form-control" id="airline" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="airline-code" class="form-label">Mã hãng bay</label>
+                                <input type="text" class="form-control" id="airline-code" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="flight-number" class="form-label">Số hiệu</label>
+                                <input type="text" class="form-control" id="flight-number" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="departure-airport" class="form-label">Sân bay đi</label>
+                                <select class="form-select" id="departure-airport" required>
+                                    <option value="">Chọn sân bay</option>
+                                    <option value="HAN">Hà Nội (HAN)</option>
+                                    <option value="SGN">Hồ Chí Minh (SGN)</option>
+                                    <option value="DAD">Đà Nẵng (DAD)</option>
+                                    <option value="CXR">Nha Trang (CXR)</option>
+                                    <option value="PQC">Phú Quốc (PQC)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="arrival-airport" class="form-label">Sân bay đến</label>
+                                <select class="form-select" id="arrival-airport" required>
+                                    <option value="">Chọn sân bay</option>
+                                    <option value="HAN">Hà Nội (HAN)</option>
+                                    <option value="SGN">Hồ Chí Minh (SGN)</option>
+                                    <option value="DAD">Đà Nẵng (DAD)</option>
+                                    <option value="CXR">Nha Trang (CXR)</option>
+                                    <option value="PQC">Phú Quốc (PQC)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="departure-time" class="form-label">Thời gian khởi hành</label>
+                                <input type="datetime-local" class="form-control" id="departure-time" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="arrival-time" class="form-label">Thời gian đến</label>
+                                <input type="datetime-local" class="form-control" id="arrival-time" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="price" class="form-label">Giá vé phổ thông (VND)</label>
+                                <input type="number" class="form-control" id="price" required min="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="status" class="form-label">Trạng thái</label>
+                                <select class="form-select" id="status" required>
+                                    <option value="scheduled">Đã lên lịch</option>
+                                    <option value="boarding">Đang lên máy bay</option>
+                                    <option value="departed">Đã khởi hành</option>
+                                    <option value="arrived">Đã đến nơi</option>
+                                    <option value="cancelled">Đã hủy</option>
+                                    <option value="delayed">Bị hoãn</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Ghi chú</label>
+                                <p class="form-text text-muted small">Giá vé các hạng ghế khác sẽ được tính tự động dựa trên giá vé phổ thông.</p>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Hạng vé khả dụng</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input available-class" type="checkbox" value="ECONOMY" id="economy-class" checked>
+                                    <label class="form-check-label" for="economy-class">
+                                        Phổ thông
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input available-class" type="checkbox" value="PREMIUM_ECONOMY" id="premium-economy-class">
+                                    <label class="form-check-label" for="premium-economy-class">
+                                        Phổ thông đặc biệt
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input available-class" type="checkbox" value="BUSINESS" id="business-class">
+                                    <label class="form-check-label" for="business-class">
+                                        Thương gia
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input available-class" type="checkbox" value="FIRST" id="first-class">
+                                    <label class="form-check-label" for="first-class">
+                                        Thương gia hạng nhất
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Số ghế theo hạng</label>
+                            <div class="row mt-2" id="seat-inputs-container">
+                                <div class="col-md-3 mb-2" id="economy-seats-container">
+                                    <label for="economy-seats" class="form-label">Ghế phổ thông</label>
+                                    <input type="number" class="form-control seat-input" id="economy-seats" min="0" required>
+                                </div>
+                                <div class="col-md-3 mb-2" id="premium-seats-container" style="display: none;">
+                                    <label for="premium-seats" class="form-label">Ghế phổ thông đặc biệt</label>
+                                    <input type="number" class="form-control seat-input" id="premium-seats" min="0">
+                                </div>
+                                <div class="col-md-3 mb-2" id="business-seats-container" style="display: none;">
+                                    <label for="business-seats" class="form-label">Ghế thương gia</label>
+                                    <input type="number" class="form-control seat-input" id="business-seats" min="0">
+                                </div>
+                                <div class="col-md-3 mb-2" id="first-seats-container" style="display: none;">
+                                    <label for="first-seats" class="form-label">Ghế hạng nhất</label>
+                                    <input type="number" class="form-control seat-input" id="first-seats" min="0">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="save-flight">Lưu chuyến bay</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="delete-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Xác nhận xóa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn xóa chuyến bay này không? Hành động này không thể hoàn tác.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-danger" id="confirm-delete">Xóa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="flights.js"></script>
+    <script>
+        // Handle seat class checkboxes to show/hide appropriate seat count inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get references to checkboxes and seat input containers
+            const economyCheck = document.getElementById('economy-class');
+            const premiumCheck = document.getElementById('premium-economy-class');
+            const businessCheck = document.getElementById('business-class');
+            const firstCheck = document.getElementById('first-class');
+            
+            const economySeats = document.getElementById('economy-seats-container');
+            const premiumSeats = document.getElementById('premium-seats-container');
+            const businessSeats = document.getElementById('business-seats-container');
+            const firstSeats = document.getElementById('first-seats-container');
+            
+            // Add event listeners to checkboxes
+            economyCheck.addEventListener('change', function() {
+                economySeats.style.display = this.checked ? 'block' : 'none';
+                if (this.checked) {
+                    document.getElementById('economy-seats').setAttribute('required', 'required');
+                } else {
+                    document.getElementById('economy-seats').removeAttribute('required');
+                }
+            });
+            
+            premiumCheck.addEventListener('change', function() {
+                premiumSeats.style.display = this.checked ? 'block' : 'none';
+                if (this.checked) {
+                    document.getElementById('premium-seats').setAttribute('required', 'required');
+                } else {
+                    document.getElementById('premium-seats').removeAttribute('required');
+                }
+            });
+            
+            businessCheck.addEventListener('change', function() {
+                businessSeats.style.display = this.checked ? 'block' : 'none';
+                if (this.checked) {
+                    document.getElementById('business-seats').setAttribute('required', 'required');
+                } else {
+                    document.getElementById('business-seats').removeAttribute('required');
+                }
+            });
+            
+            firstCheck.addEventListener('change', function() {
+                firstSeats.style.display = this.checked ? 'block' : 'none';
+                if (this.checked) {
+                    document.getElementById('first-seats').setAttribute('required', 'required');
+                } else {
+                    document.getElementById('first-seats').removeAttribute('required');
+                }
+            });
+            
+            // Initialize visibility based on initial checkbox states
+            economySeats.style.display = economyCheck.checked ? 'block' : 'none';
+            premiumSeats.style.display = premiumCheck.checked ? 'block' : 'none';
+            businessSeats.style.display = businessCheck.checked ? 'block' : 'none';
+            firstSeats.style.display = firstCheck.checked ? 'block' : 'none';
+            
+            // Set required attribute based on initial checkbox states
+            if (economyCheck.checked) document.getElementById('economy-seats').setAttribute('required', 'required');
+            if (premiumCheck.checked) document.getElementById('premium-seats').setAttribute('required', 'required');
+            if (businessCheck.checked) document.getElementById('business-seats').setAttribute('required', 'required');
+            if (firstCheck.checked) document.getElementById('first-seats').setAttribute('required', 'required');
+        });
+    </script>
+</body>
+</html> 

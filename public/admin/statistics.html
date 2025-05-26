@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlyViet Admin - Thống kê & Báo cáo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .sidebar {
+            height: 100vh;
+            background-color: #212529;
+            color: white;
+            position: fixed;
+            left: 0;
+        }
+        .nav-link {
+            color: rgba(255,255,255,.75);
+        }
+        .nav-link:hover, .nav-link.active {
+            color: white;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: static;
+                height: auto;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+        #loading-spinner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .stat-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-card .icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .stat-value {
+            font-size: 26px;
+            font-weight: 700;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-spinner">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Đang tải...</span>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center py-4">
+                        <h4>FlyViet Admin</h4>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="./index.html">
+                                <i class="fas fa-plane me-2"></i>
+                                Quản lý Chuyến bay
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="./bookings.html">
+                                <i class="fas fa-ticket-alt me-2"></i>
+                                Quản lý Đặt vé
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="./promotions.html">
+                                <i class="fas fa-tag me-2"></i>
+                                Quản lý Khuyến mãi
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Thống kê & Báo cáo
+                            </a>
+                        </li>
+                        <li class="nav-item mt-5">
+                            <a class="nav-link" href="/">
+                                <i class="fas fa-sign-out-alt me-2"></i>
+                                Đăng xuất
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Thống kê & Báo cáo</h1>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-secondary" id="export-pdf">
+                            <i class="fas fa-file-pdf me-2"></i>Xuất PDF
+                        </button>
+                        <button class="btn btn-outline-secondary" id="export-excel">
+                            <i class="fas fa-file-excel me-2"></i>Xuất Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Phạm vi thời gian</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="filter-form" class="row g-3">
+                            <div class="col-md-4">
+                                <label for="date-range" class="form-label">Khoảng thời gian</label>
+                                <select id="date-range" class="form-select">
+                                    <option value="today">Hôm nay</option>
+                                    <option value="yesterday">Hôm qua</option>
+                                    <option value="week" selected>7 ngày gần đây</option>
+                                    <option value="month">30 ngày gần đây</option>
+                                    <option value="quarter">Quý này</option>
+                                    <option value="year">Năm nay</option>
+                                    <option value="custom">Tùy chỉnh</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4" id="from-date-container" style="display: none;">
+                                <label for="from-date" class="form-label">Từ ngày</label>
+                                <input type="date" class="form-control" id="from-date">
+                            </div>
+                            <div class="col-md-4" id="to-date-container" style="display: none;">
+                                <label for="to-date" class="form-label">Đến ngày</label>
+                                <input type="date" class="form-control" id="to-date">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-sync-alt me-2"></i>Cập nhật
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-4">
+                        <div class="card stat-card h-100">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="icon me-3 bg-primary-subtle text-primary">
+                                    <i class="fas fa-ticket-alt"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-label">Tổng đơn đặt vé</div>
+                                    <div class="stat-value" id="total-bookings">0</div>
+                                    <div class="text-success" id="bookings-comparison">
+                                        <small><i class="fas fa-arrow-up"></i> 0%</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card stat-card h-100">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="icon me-3 bg-success-subtle text-success">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-label">Doanh thu</div>
+                                    <div class="stat-value" id="total-revenue">0đ</div>
+                                    <div class="text-success" id="revenue-comparison">
+                                        <small><i class="fas fa-arrow-up"></i> 0%</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card stat-card h-100">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="icon me-3 bg-info-subtle text-info">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-label">Số hành khách</div>
+                                    <div class="stat-value" id="total-passengers">0</div>
+                                    <div class="text-success" id="passengers-comparison">
+                                        <small><i class="fas fa-arrow-up"></i> 0%</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row mb-4">
+                    <!-- Revenue Chart -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5>Doanh thu theo thời gian</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="revenue-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bookings Chart -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5>Số lượng đặt vé theo thời gian</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="bookings-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Second Charts Row -->
+                <div class="row mb-4">
+                    <!-- Popular Routes Chart -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5>Tuyến đường phổ biến</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="routes-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Booking Status Chart -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5>Trạng thái đơn đặt vé</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="status-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Routes Table -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Tuyến đường hàng đầu</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Tuyến đường</th>
+                                        <th>Số lượng đặt vé</th>
+                                        <th>Doanh thu</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="top-routes-table">
+                                    <!-- Data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="statistics.js"></script>
+</body>
+</html> 

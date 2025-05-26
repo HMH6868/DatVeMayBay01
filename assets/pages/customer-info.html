@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông tin khách hàng - FlyViet</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/customer-info.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .summary-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            position: sticky;
+            top: 20px;
+        }
+
+        .summary-card h3 {
+            color: #0066cc;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 12px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .flight-route {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .airport-code {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .airport-name {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .route-divider {
+            flex: 1;
+            position: relative;
+            margin: 0 15px;
+            height: 40px;
+        }
+
+        .route-line {
+            height: 2px;
+            background: #ddd;
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            margin-top: -1px;
+        }
+
+        .route-plane {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #0066cc;
+            background: white;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px white;
+        }
+
+        .flight-detail {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+        }
+
+        .flight-detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .flight-detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .flight-detail-label {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .flight-detail-value {
+            color: #333;
+            font-weight: 500;
+            font-size: 13px;
+            text-align: right;
+        }
+
+        .flight-times {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .flight-time-item {
+            text-align: center;
+        }
+
+        .flight-time {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .flight-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .airline-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            background: #f0f7ff;
+        }
+
+        .airline-logo {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 50%;
+            margin-right: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .airline-name {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .airline-flight {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .passenger-summary {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+        }
+
+        .divider {
+            height: 1px;
+            background: #eaeaea;
+            margin: 15px 0;
+        }
+
+        .price-summary {
+            margin-top: 20px;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .price-label {
+            color: #666;
+        }
+
+        .price-value {
+            font-weight: 500;
+        }
+
+        .total-price-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px dashed #eaeaea;
+        }
+
+        .total-price-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .total-price-value {
+            font-weight: 700;
+            color: #0066cc;
+            font-size: 18px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background-color: #e6f7ee;
+            color: #28a745;
+        }
+
+        .badge-primary {
+            background-color: #e6f0ff;
+            color: #0066cc;
+        }
+
+        .flight-type {
+            margin-bottom: 10px;
+        }
+
+        .return-flight {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eaeaea;
+        }
+
+        .return-flight-label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-weight: 500;
+            color: #0066cc;
+        }
+
+        .return-flight-label i {
+            margin-right: 5px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100px;
+            color: #666;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .loading i {
+            margin-right: 8px;
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>FlyViet</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../../index.html">Trang chủ</a></li>
+                    <li><a href="khuyen-mai.html">Khuyến mãi</a></li>
+                    <li><a href="ticket-search.html">Tra cứu vé</a></li>
+                    <li><a href="ho-tro.html">Hỗ trợ</a></li>
+                    <li><a href="lien-he.html">Liên hệ</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="page-header">
+        <div class="container">
+            <h1>Thông tin khách hàng</h1>
+            <p>Vui lòng điền đầy đủ thông tin để hoàn tất đặt vé</p>
+        </div>
+    </section>
+
+    <section class="customer-info-container">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <form id="customer-form" class="form-container">
+                        <div class="form-section">
+                            <h3>Thông tin liên hệ</h3>
+                            <div class="form-group">
+                                <label for="contact-name" class="required">Họ tên người liên hệ</label>
+                                <input type="text" id="contact-name" name="contact-name" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="contact-email" class="required">Email</label>
+                                        <input type="email" id="contact-email" name="contact-email" required>
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="contact-phone" class="required">Số điện thoại</label>
+                                        <input type="tel" id="contact-phone" name="contact-phone" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3>Thông tin hành khách</h3>
+                            <div id="passenger-forms-container">
+                                <!-- Passenger forms will be dynamically inserted here by script.js -->
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3>Dịch vụ bổ sung</h3>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="service-food"> Đặt suất ăn đặc biệt (+150.000đ)
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="service-luggage"> Hành lý ký gửi thêm 15kg (+200.000đ)
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" name="service-insurance"> Bảo hiểm du lịch (+100.000đ)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="notes">
+                            <p><i class="fas fa-info-circle"></i> Thông tin cá nhân của bạn sẽ được sử dụng để xử lý đơn hàng và các mục đích khác được mô tả trong <a href="#">chính sách bảo mật</a> của chúng tôi.</p>
+                        </div>
+                        
+                        <button type="submit" class="btn-continue">Tiếp tục</button>
+                    </form>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="summary-card">
+                        <h3>Chi tiết chuyến bay</h3>
+                        <div id="flight-summary">
+                            <div class="loading">
+                                <i class="fas fa-spinner fa-spin"></i> Đang tải thông tin...
+                            </div>
+                            
+                            <div class="flight-details" style="display: none;">
+                                <div class="flight-type">
+                                    <span class="badge badge-primary" id="flight-class">Phổ thông</span>
+                                    <span class="badge badge-success" id="flight-type">Một chiều</span>
+                                </div>
+                                
+                                <div class="departure-flight">
+                                    <div class="airline-info">
+                                        <div class="airline-logo">
+                                            <i class="fas fa-plane" style="color: #0066cc;"></i>
+                                        </div>
+                                        <div>
+                                            <div class="airline-name" id="airline-name">Vietnam Airlines</div>
+                                            <div class="airline-flight" id="flight-number">VN123</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flight-route">
+                                        <div class="flight-endpoint">
+                                            <div class="airport-code" id="departure-code">HAN</div>
+                                            <div class="airport-name" id="departure-name">Hà Nội</div>
+                                        </div>
+                                        <div class="route-divider">
+                                            <div class="route-line"></div>
+                                            <div class="route-plane">
+                                                <i class="fas fa-plane" style="font-size: 12px;"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flight-endpoint">
+                                            <div class="airport-code" id="arrival-code">SGN</div>
+                                            <div class="airport-name" id="arrival-name">Hồ Chí Minh</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flight-times">
+                                        <div class="flight-time-item">
+                                            <div class="flight-time" id="departure-time">08:30</div>
+                                            <div class="flight-date" id="departure-date">20/05/2025</div>
+                                        </div>
+                                        <div class="flight-time-item">
+                                            <div class="flight-detail-label">Thời gian bay</div>
+                                            <div id="flight-duration">2h 10m</div>
+                                        </div>
+                                        <div class="flight-time-item">
+                                            <div class="flight-time" id="arrival-time">10:40</div>
+                                            <div class="flight-date" id="arrival-date">20/05/2025</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="return-flight" id="return-flight-info" style="display: none;">
+                                    <div class="return-flight-label">
+                                        <i class="fas fa-plane-arrival"></i> Chuyến về
+                                    </div>
+                                </div>
+                                
+                                <div class="divider"></div>
+                                
+                                <div class="flight-detail">
+                                    <div class="flight-detail-row">
+                                        <div class="flight-detail-label">Người lớn</div>
+                                        <div class="flight-detail-value" id="adult-count">1</div>
+                                    </div>
+                                    <div class="flight-detail-row" id="child-row" style="display: none;">
+                                        <div class="flight-detail-label">Trẻ em</div>
+                                        <div class="flight-detail-value" id="child-count">0</div>
+                                    </div>
+                                    <div class="flight-detail-row" id="infant-row" style="display: none;">
+                                        <div class="flight-detail-label">Em bé</div>
+                                        <div class="flight-detail-value" id="infant-count">0</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="price-summary">
+                                    <div class="price-row">
+                                        <div class="price-label">Giá vé cơ bản</div>
+                                        <div class="price-value" id="base-price">1.800.000 ₫</div>
+                                    </div>
+                                    <div class="price-row" id="service-fee-row">
+                                        <div class="price-label">Dịch vụ bổ sung</div>
+                                        <div class="price-value" id="service-fee">0 ₫</div>
+                                    </div>
+                                    <div class="price-row" id="tax-fee-row">
+                                        <div class="price-label">Thuế & phí</div>
+                                        <div class="price-value" id="tax-fee">200.000 ₫</div>
+                                    </div>
+                                    <div class="price-row" id="discount-row" style="display: none;">
+                                        <div class="price-label">Giảm giá</div>
+                                        <div class="price-value" id="discount-amount">-0 ₫</div>
+                                    </div>
+                                    <div class="total-price-row">
+                                        <div class="total-price-label">Tổng cộng</div>
+                                        <div class="total-price-value" id="total-price">2.000.000 ₫</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>FlyViet</h3>
+                    <p>Đặt vé máy bay trực tuyến nhanh chóng, tiện lợi với giá tốt nhất.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h4>Thông tin</h4>
+                    <ul>
+                        <li><a href="#">Về chúng tôi</a></li>
+                        <li><a href="#">Điều khoản sử dụng</a></li>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                        <li><a href="#">Câu hỏi thường gặp</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Hỗ trợ</h4>
+                    <ul>
+                        <li><a href="#">Trung tâm trợ giúp</a></li>
+                        <li><a href="#">Hướng dẫn đặt vé</a></li>
+                        <li><a href="#">Chính sách hoàn hủy</a></li>
+                        <li><a href="#">Chính sách bảo hiểm</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Liên hệ</h4>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Đường ABC, Quận 1, TP.HCM</li>
+                        <li><i class="fas fa-phone"></i> 1900 1234</li>
+                        <li><i class="fas fa-envelope"></i> support@flyviet.vn</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 FlyViet. Tất cả các quyền được bảo lưu. ( Nhóm 12 )</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCustomerInfoPage();
+        });
+    </script>
+</body>
+</html>

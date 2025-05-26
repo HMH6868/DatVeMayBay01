@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt vé thành công | FlyViet</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --secondary-color: #6c757d;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-radius: 10px;
+            --box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f7fa;
+        }
+
+        .section-padding {
+            padding: 50px 0;
+        }
+        
+        .success-header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 1s ease;
+        }
+        
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background-color: var(--success-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            font-size: 36px;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+            animation: pulse 2s infinite;
+            transition: var(--transition);
+        }
+        
+        .success-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--success-color);
+        }
+        
+        .booking-reference {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .booking-reference strong {
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: 1px;
+        }
+        
+        .success-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 40px;
+            margin-bottom: 50px;
+            animation: slideUp 0.8s ease;
+            position: relative;
+            overflow: hidden;
+            border-top: 5px solid var(--success-color);
+        }
+        
+        .info-section {
+            margin-bottom: 40px;
+            transition: var(--transition);
+        }
+        
+        .info-section:hover {
+            transform: translateY(-5px);
+        }
+        
+        .info-section h3 {
+            font-size: 20px;
+            font-weight: 600;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .info-section h3 i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .flight-details, .payment-details {
+            line-height: 1.8;
+            padding: 15px;
+            background-color: #f8fbff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .flight-details p, .payment-details p {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: baseline;
+        }
+        
+        .flight-details strong, .payment-details strong {
+            min-width: 140px;
+            display: inline-block;
+            color: #555;
+        }
+        
+        .passenger-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .passenger-table th {
+            background-color: #f0f6ff;
+            color: var(--primary-color);
+            text-align: left;
+            padding: 12px 15px;
+            font-weight: 500;
+        }
+        
+        .passenger-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .passenger-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .passenger-table tr:hover td {
+            background-color: #f8fbff;
+        }
+        
+        .btn-primary, .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 16px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.1);
+        }
+        
+        .success-actions {
+            text-align: center;
+            margin-top: 40px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .warning-box {
+            background-color: #fff9e6;
+            border-left: 4px solid var(--warning-color);
+            color: #856404;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .warning-box h3 {
+            color: #856404;
+            font-size: 20px;
+            margin-bottom: 10px;
+            border: none !important;
+        }
+        
+        .error-box {
+            background-color: #ffeaed;
+            border-left: 4px solid var(--danger-color);
+            color: #721c24;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .error-box h3 {
+            color: #721c24;
+            font-size: 20px;
+            margin-bottom: 10px;
+            border: none !important;
+        }
+        
+        #loading-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+        
+        .spinner-box {
+            text-align: center;
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 90%;
+            width: 300px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        .loading-text {
+            margin-top: 15px;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        /* Divider element with plane icon */
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 30px 0;
+            color: #ccc;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background-color: #eee;
+        }
+
+        .divider i {
+            padding: 0 15px;
+            color: var(--primary-color);
+            font-size: 20px;
+        }
+
+        /* Status badge */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .status-badge.paid {
+            background-color: #e8f7ee;
+            color: var(--success-color);
+        }
+
+        .status-badge.pending {
+            background-color: #fff9e6;
+            color: #e6a400;
+        }
+
+        .status-badge.unpaid {
+            background-color: #f8f9fa;
+            color: var(--secondary-color);
+        }
+
+        /* Print styles */
+        @media print {
+            header, footer, .success-actions, 
+            .btn-secondary, .btn-primary {
+                display: none;
+            }
+            
+            body {
+                font-size: 12pt;
+                background-color: white;
+            }
+            
+            .success-content {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+
+            .success-icon {
+                box-shadow: none;
+                animation: none;
+            }
+
+            .info-section:hover {
+                transform: none;
+            }
+
+            .flight-details, .payment-details,
+            .passenger-table {
+                box-shadow: none;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            0% { transform: translateY(30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 10px 20px rgba(40, 167, 69, 0.4); }
+            100% { transform: scale(1); box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .success-content {
+                padding: 25px;
+            }
+            
+            .flight-details strong, .payment-details strong {
+                min-width: 120px;
+            }
+            
+            .success-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn-primary, .btn-secondary {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>FlyViet</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../../index.html">Trang chủ</a></li>
+                    <li><a href="khuyen-mai.html">Khuyến mãi</a></li>
+                    <li><a href="ticket-search.html">Tra cứu vé</a></li>
+                    <li><a href="ho-tro.html">Hỗ trợ</a></li>
+                    <li><a href="lien-he.html">Liên hệ</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container section-padding">
+        <div class="success-header">
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <h2 class="success-title">Đặt vé thành công!</h2>
+            <p class="booking-reference">Mã đặt chỗ của bạn: <strong id="booking-reference">Đang tải...</strong></p>
+            <p>Thông tin chi tiết đã được gửi đến email của bạn.</p>
+        </div>
+        
+        <div class="success-content">
+            <div id="notification-area"></div>
+            
+            <div id="flight-info" class="info-section">
+                <h3><i class="fas fa-plane-departure"></i> Thông tin chuyến bay</h3>
+                <div class="flight-details">
+                    <p>Đang tải thông tin...</p>
+                </div>
+            </div>
+            
+            <div class="divider">
+                <i class="fas fa-plane"></i>
+            </div>
+            
+            <div id="passenger-info" class="info-section">
+                <h3><i class="fas fa-users"></i> Thông tin hành khách</h3>
+                <div>
+                    <p>Đang tải thông tin...</p>
+                </div>
+            </div>
+            
+            <div class="divider">
+                <i class="fas fa-receipt"></i>
+            </div>
+            
+            <div id="payment-info" class="info-section">
+                <h3><i class="fas fa-credit-card"></i> Thông tin thanh toán</h3>
+                <div class="payment-details">
+                    <p>Đang tải thông tin...</p>
+                </div>
+            </div>
+            
+            <div class="success-actions">
+                <button class="btn-secondary" onclick="window.location.reload()">
+                    <i class="fas fa-sync-alt"></i> Tải lại trang
+                </button>
+                <a href="../../index.html" class="btn-secondary">
+                    <i class="fas fa-home"></i> Về trang chủ
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>FlyViet</h3>
+                    <p>Đặt vé máy bay trực tuyến nhanh chóng, tiện lợi với giá tốt nhất.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h4>Thông tin</h4>
+                    <ul>
+                        <li><a href="#">Về chúng tôi</a></li>
+                        <li><a href="#">Điều khoản sử dụng</a></li>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                        <li><a href="#">Câu hỏi thường gặp</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Hỗ trợ</h4>
+                    <ul>
+                        <li><a href="#">Trung tâm trợ giúp</a></li>
+                        <li><a href="#">Hướng dẫn đặt vé</a></li>
+                        <li><a href="#">Chính sách hoàn hủy</a></li>
+                        <li><a href="#">Chính sách bảo hiểm</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Liên hệ</h4>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Đường ABC, Quận 1, TP.HCM</li>
+                        <li><i class="fas fa-phone"></i> 1900 1234</li>
+                        <li><i class="fas fa-envelope"></i> support@flyviet.vn</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 FlyViet. Tất cả các quyền được bảo lưu. ( Nhóm 12 )</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="loading-indicator" style="display: none;">
+        <div class="spinner-box">
+            <div class="spinner"></div>
+            <p class="loading-text">Đang tải thông tin...</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ngăn chặn mọi hành động chuyển trang tự động
+            history.pushState(null, null, document.URL);
+            window.addEventListener('popstate', function () {
+                history.pushState(null, null, document.URL);
+            });
+            
+            // Lấy booking ID từ URL hoặc sessionStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            const bookingIdFromUrl = urlParams.get('booking_id');
+            const bookingIdFromSession = sessionStorage.getItem('bookingId');
+            
+            const bookingId = bookingIdFromUrl || bookingIdFromSession;
+            
+            if (bookingId) {
+                document.getElementById('booking-reference').textContent = bookingId;
+                
+                // Tải thông tin đặt vé sau 1 giây để đảm bảo trang đã load hoàn toàn
+                setTimeout(() => {
+                loadBookingDetails(bookingId);
+                }, 1000);
+            } else {
+                showError("Không tìm thấy thông tin đặt vé", 
+                    "Vui lòng quay lại trang chủ và thử lại.");
+            }
+        });
+        
+        async function loadBookingDetails(bookingId) {
+            showLoading();
+            
+            try {
+                // Thêm timeout để đảm bảo request không bị treo
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                
+                const response = await fetch(`http://localhost:3000/api/bookings/${bookingId}`, {
+                    signal: controller.signal
+                }).catch(error => {
+                    if (error.name === 'AbortError') {
+                        throw new Error('Yêu cầu quá thời gian, vui lòng thử lại sau');
+                    }
+                    throw error;
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`Lỗi ${response.status}: Không thể tải thông tin đặt vé`);
+                }
+                
+                const data = await response.json();
+                console.log('Dữ liệu booking:', data);
+                
+                if (!data || !data.booking) {
+                    throw new Error('Dữ liệu không hợp lệ hoặc không có thông tin đặt vé');
+                }
+                
+                // Kiểm tra trạng thái thanh toán
+                if (data.booking.payment_status !== 'paid') {
+                    console.log('Trạng thái thanh toán:', data.booking.payment_status);
+                    
+                    showWarning(
+                        "Thanh toán chưa hoàn tất",
+                        `Đơn hàng của bạn có trạng thái: <span class="status-badge ${data.booking.payment_status}">${formatPaymentStatus(data.booking.payment_status)}</span><br>
+                        Vui lòng chờ xác nhận thanh toán hoặc liên hệ với chúng tôi nếu cần hỗ trợ.`,
+                        `<a href="payment-waiting.html?booking_id=${bookingId}" class="btn-primary">
+                            <i class="fas fa-sync-alt"></i> Kiểm tra trạng thái
+                        </a>`
+                    );
+                    
+                    // Hiển thị một số thông tin cơ bản
+                    displayBasicInfo(data);
+                } else {
+                    // Hiển thị thông tin đầy đủ cho đơn hàng đã thanh toán
+                    displayFullBookingInfo(data);
+                }
+                
+                hideLoading();
+            } catch (error) {
+                console.error('Lỗi khi tải thông tin đặt vé:', error);
+                hideLoading();
+                
+                showError(
+                    "Không thể tải thông tin đặt vé",
+                    error.message || "Đã xảy ra lỗi. Vui lòng thử lại sau."
+                );
+                }
+        }
+        
+        function displayBasicInfo(data) {
+            // Determine if this is a one-way or round-trip booking
+            const isRoundTrip = data.booking.is_round_trip === 1;
+            
+            // Hiển thị thông tin cơ bản của chuyến bay
+            const flightInfoElement = document.getElementById('flight-info');
+            
+            // Start building HTML for flight info
+            let flightInfoHTML = `
+                <h3><i class="fas fa-plane-departure"></i> Thông tin chuyến bay</h3>
+                <div class="flight-details">
+                    <p><strong>Loại vé:</strong> ${isRoundTrip ? 'Khứ hồi' : 'Một chiều'}</p>
+                    <p><strong>Hạng vé:</strong> ${formatTravelClass(data.booking.travel_class)}</p>
+            `;
+            
+            // Add departure flight details
+            if (data.departureFlight) {
+                flightInfoHTML += `
+                    <div>
+                        ${isRoundTrip ? '<h4 style="margin-top: 15px; color: #0066cc;">CHUYẾN ĐI</h4>' : ''}
+                        <p><strong>Chuyến bay:</strong> ${data.departureFlight.airline} (${data.departureFlight.id})</p>
+                        <p><strong>Ngày bay:</strong> ${data.departureFlight.date}</p>
+                    </div>
+                `;
+            }
+            
+            flightInfoHTML += `</div>`;
+            flightInfoElement.innerHTML = flightInfoHTML;
+            
+            // Hiển thị thông tin liên hệ 
+            const paymentInfoElement = document.getElementById('payment-info');
+            paymentInfoElement.innerHTML = `
+                <h3><i class="fas fa-credit-card"></i> Thông tin thanh toán</h3>
+                <div class="payment-details">
+                    <p><strong>Người đặt:</strong> ${data.booking.contact_name}</p>
+                    <p><strong>Tổng tiền:</strong> ${formatCurrency(data.booking.total_amount)}</p>
+                    <p><strong>Trạng thái thanh toán:</strong> <span class="status-badge ${data.booking.payment_status}">${formatPaymentStatus(data.booking.payment_status)}</span></p>
+                </div>
+            `;
+            
+            // Thêm nút hành động
+            updateActionButtons(data.booking.booking_id);
+        }
+        
+        function displayFullBookingInfo(data) {
+            // Determine if this is a one-way or round-trip booking
+            const isRoundTrip = data.booking.is_round_trip === 1;
+            
+            // Hiển thị thông tin chi tiết chuyến bay
+                const flightInfoElement = document.getElementById('flight-info');
+            
+            // Start building HTML for flight info
+            let flightInfoHTML = `
+                <h3><i class="fas fa-plane-departure"></i> Thông tin chuyến bay</h3>
+                    <div class="flight-details">
+                    <p><strong>Loại vé:</strong> ${isRoundTrip ? 'Khứ hồi' : 'Một chiều'}</p>
+                        <p><strong>Hạng vé:</strong> ${formatTravelClass(data.booking.travel_class)}</p>
+            `;
+            
+            // Add departure flight details
+            if (data.departureFlight) {
+                flightInfoHTML += `
+                    <div ${isRoundTrip ? 'style="margin-bottom: 20px; border-bottom: 1px dashed #ddd; padding-bottom: 15px;"' : ''}>
+                        ${isRoundTrip ? '<h4 style="margin-top: 15px; color: #0066cc;">CHUYẾN ĐI</h4>' : ''}
+                        <p><strong>Chuyến bay:</strong> ${data.departureFlight.airline} (${data.departureFlight.id})</p>
+                        <p><strong>Ngày bay:</strong> ${data.departureFlight.date}</p>
+                        <p><strong>Khởi hành:</strong> ${getAirportName(data.departureFlight.departure)} (${data.departureFlight.departureTime})</p>
+                        <p><strong>Điểm đến:</strong> ${getAirportName(data.departureFlight.destination)} (${data.departureFlight.arrivalTime})</p>
+                        <p><strong>Thời gian bay:</strong> ${data.departureFlight.duration}</p>
+                    </div>
+                `;
+            }
+            
+            // Add return flight details if this is a round-trip booking
+            if (isRoundTrip && data.returnFlight) {
+                flightInfoHTML += `
+                    <div>
+                        <h4 style="margin-top: 15px; color: #0066cc;">CHUYẾN VỀ</h4>
+                        <p><strong>Chuyến bay:</strong> ${data.returnFlight.airline} (${data.returnFlight.id})</p>
+                        <p><strong>Ngày bay:</strong> ${data.returnFlight.date}</p>
+                        <p><strong>Khởi hành:</strong> ${getAirportName(data.returnFlight.departure)} (${data.returnFlight.departureTime})</p>
+                        <p><strong>Điểm đến:</strong> ${getAirportName(data.returnFlight.destination)} (${data.returnFlight.arrivalTime})</p>
+                        <p><strong>Thời gian bay:</strong> ${data.returnFlight.duration}</p>
+                    </div>
+                `;
+            }
+            
+            flightInfoHTML += `</div>`;
+            flightInfoElement.innerHTML = flightInfoHTML;
+                
+            // Hiển thị thông tin hành khách
+                const passengerInfoElement = document.getElementById('passenger-info');
+                passengerInfoElement.innerHTML = `
+                <h3><i class="fas fa-users"></i> Thông tin hành khách</h3>
+                    <div class="passenger-list">
+                <table class="passenger-table">
+                            <thead>
+                                <tr>
+                                                        <th>Họ tên</th>                            <th>Giới tính</th>                            <th>Số hộ chiếu/CMND</th>                            <th>Loại hành khách</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.passengers.map(passenger => `
+                                    <tr>
+                                        <td>${passenger.full_name}</td>
+                                        <td>${formatGender(passenger.gender)}</td>
+                                        <td>${passenger.passport_number}</td>
+                                        <td>${formatPassengerType(passenger.passenger_type)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+            // Hiển thị thông tin thanh toán
+                const paymentInfoElement = document.getElementById('payment-info');
+                paymentInfoElement.innerHTML = `
+                <h3><i class="fas fa-credit-card"></i> Thông tin thanh toán</h3>
+                    <div class="payment-details">
+                        <p><strong>Người đặt:</strong> ${data.booking.contact_name}</p>
+                        <p><strong>Email:</strong> ${data.booking.email || 'N/A'}</p>
+                        <p><strong>Điện thoại:</strong> ${data.booking.phone || 'N/A'}</p>
+                        <p><strong>Ngày đặt vé:</strong> ${formatDate(data.booking.booking_time)}</p>
+                        <p><strong>Tổng tiền:</strong> ${formatCurrency(data.booking.total_amount)}</p>
+                        <p><strong>Phương thức thanh toán:</strong> ${data.paymentInfo ? formatPaymentMethod(data.paymentInfo.method) : 'N/A'}</p>
+                    
+                        ${data.paymentInfo ? `<p><strong>Thời gian thanh toán:</strong> ${formatDate(data.paymentInfo.payment_date)}</p>` : ''}
+                        ${data.booking.promo_code ? `<p><strong>Mã khuyến mãi:</strong> <span class="status-badge" style="background-color: #e6f7ff; color: #0066cc">${data.booking.promo_code}</span></p>` : ''}
+                        <p><strong>Trạng thái thanh toán:</strong> <span class="status-badge paid">Đã thanh toán</span></p>
+                </div>
+            `;
+            
+            // Hiển thị các dịch vụ đã chọn (nếu có)
+            let services = [];
+            
+            if (data.passengers.some(p => p.luggage_weight > 0)) {
+                services.push('Hành lý ký gửi');
+            }
+            if (data.passengers.some(p => p.insurance == 1)) {
+                services.push('Bảo hiểm du lịch');
+            }
+            if (data.passengers.some(p => p.meal == 1)) {
+                services.push('Suất ăn đặc biệt');
+            }
+            
+            if (services.length > 0) {
+                const serviceInfo = `
+                    <div class="payment-details" style="margin-top: 15px; background-color: #f0f9ff;">
+                        <p><strong>Dịch vụ bổ sung:</strong> ${services.join(', ')}</p>
+                    </div>
+                `;
+                paymentInfoElement.innerHTML += serviceInfo;
+            }
+            
+            // Cập nhật nút hành động
+            const actionButtons = document.querySelector('.success-actions');
+            actionButtons.innerHTML = `
+                <button class="btn-primary" onclick="printTicket()">
+                    <i class="fas fa-print"></i> In vé
+                </button>
+                <a href="../../index.html" class="btn-secondary">
+                    <i class="fas fa-home"></i> Về trang chủ
+                </a>
+            `;
+        }
+        
+        function updateActionButtons(bookingId) {
+                const actionButtons = document.querySelector('.success-actions');
+                actionButtons.innerHTML = `
+                <a href="payment-waiting.html?booking_id=${bookingId}" class="btn-primary">
+                    <i class="fas fa-sync-alt"></i> Kiểm tra trạng thái
+                </a>
+                <a href="../../index.html" class="btn-secondary">
+                    <i class="fas fa-home"></i> Về trang chủ
+                </a>
+                `;
+        }
+        
+        function showWarning(title, message, actionHTML = '') {
+            const notificationArea = document.getElementById('notification-area');
+            notificationArea.innerHTML = `
+                <div class="warning-box">
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                    ${actionHTML ? `<div style="margin-top: 15px;">${actionHTML}</div>` : ''}
+                </div>
+            `;
+        }
+        
+        function showError(title, message, actionHTML = '') {
+            const notificationArea = document.getElementById('notification-area');
+            notificationArea.innerHTML = `
+                <div class="error-box">
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                    ${actionHTML ? `<div style="margin-top: 15px;">${actionHTML}</div>` : ''}
+                </div>
+            `;
+            
+            // Ẩn các section khác
+            document.getElementById('flight-info').style.display = 'none';
+            document.getElementById('passenger-info').style.display = 'none';
+            document.getElementById('payment-info').style.display = 'none';
+        }
+        
+        function showLoading() {
+            document.getElementById('loading-indicator').style.display = 'flex';
+            }
+        
+        function hideLoading() {
+            document.getElementById('loading-indicator').style.display = 'none';
+        }
+        
+        function formatTravelClass(travelClass) {
+            const classMap = {
+                'ECONOMY': 'Phổ thông',
+                'PREMIUM_ECONOMY': 'Phổ thông đặc biệt',
+                'BUSINESS': 'Thương gia',
+                'FIRST': 'Hạng nhất'
+            };
+            return classMap[travelClass] || travelClass;
+        }
+        
+        function formatGender(gender) {
+            if (!gender) return 'N/A';
+            
+            const genderMap = {
+                'male': 'Nam',
+                'female': 'Nữ',
+                'other': 'Khác'
+            };
+            
+            return genderMap[gender.toLowerCase()] || gender;
+        }
+        
+        function formatPassengerType(type) {
+            if (!type) return 'Người lớn';
+            
+            const typeMap = {
+                'ADULT': 'Người lớn',
+                'CHILD': 'Trẻ em',
+                'INFANT': 'Em bé'
+            };
+            
+            return typeMap[type] || type;
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            
+            try {
+                // Create a new date object to ensure proper parsing
+                const date = new Date(dateString);
+                
+                // Ensure the date is valid before formatting
+                if (isNaN(date.getTime())) return dateString;
+                
+                // Use a more explicit formatting approach to avoid timezone issues
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                
+                return `${day}/${month}/${year} ${hours}:${minutes}`;
+            } catch (e) {
+                return dateString;
+            }
+        }
+        
+        function formatPaymentStatus(status) {
+            const statusMap = {
+                'unpaid': 'Chưa thanh toán',
+                'pending': 'Đang xử lý',
+                'paid': 'Đã thanh toán',
+                'cancelled': 'Đã hủy',
+                'refunded': 'Đã hoàn tiền'
+            };
+            
+            return statusMap[status] || status;
+        }
+        
+        function formatCurrency(amount) {
+            if (!amount && amount !== 0) return 'N/A';
+            
+            try {
+                // Sử dụng NumberFormat có độ chính xác cao hơn
+                const formatter = new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND',
+                    maximumFractionDigits: 0,
+                    minimumFractionDigits: 0
+                });
+                
+                return formatter.format(amount);
+            } catch (e) {
+                // Fallback nếu có lỗi với Intl API
+                return amount.toLocaleString('vi-VN') + ' ₫';
+            }
+        }
+        
+        function printTicket() {
+            window.print();
+        }
+
+        // Helper function to get airport name from code
+        function getAirportName(code) {
+            const airports = {
+                'HAN': 'Hà Nội (HAN)',
+                'SGN': 'Hồ Chí Minh (SGN)',
+                'DAD': 'Đà Nẵng (DAD)',
+                'CXR': 'Nha Trang (CXR)',
+                'PQC': 'Phú Quốc (PQC)'
+            };
+            return airports[code] || code;
+        }
+
+        function formatPaymentMethod(method) {
+            const methodMap = {
+                'bank_transfer': 'Chuyển khoản ngân hàng',
+                'momo': 'Ví điện tử MoMo',
+                'credit_card': 'Thẻ tín dụng',
+                'debit_card': 'Thẻ ghi nợ'
+            };
+            
+            return methodMap[method] || method;
+        }
+        
+        // Helper function to format transaction info
+        function formatTransactionInfo(infoStr) {
+            try {
+                // Try to parse as JSON
+                const info = JSON.parse(infoStr);
+                let result = '';
+                
+                if (info.phoneNumber) {
+                    result += `SĐT: ${info.phoneNumber}`;
+                }
+                
+                if (info.accountNumber) {
+                    result += `Số tài khoản: ${info.accountNumber}`;
+                }
+                
+                if (info.bankName) {
+                    result += `${result ? ', ' : ''}Ngân hàng: ${info.bankName}`;
+                }
+                
+                if (info.accountName) {
+                    result += `${result ? ', ' : ''}Tên TK: ${info.accountName}`;
+                }
+                
+                if (info.transactionDate) {
+                    const date = new Date(info.transactionDate);
+                    if (!isNaN(date.getTime())) {
+                        result += `${result ? ', ' : ''}Ngày giao dịch: ${formatDate(date)}`;
+                    }
+                }
+                
+                return result || infoStr;
+            } catch (e) {
+                // If not valid JSON, return as is
+                return infoStr;
+            }
+        }
+    </script>
+</body>
+</html>

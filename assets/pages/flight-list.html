@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách chuyến bay - FlyViet</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/flight-list.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>FlyViet</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../../index.html">Trang chủ</a></li>
+                    <li><a href="khuyen-mai.html">Khuyến mãi</a></li>
+                    <li><a href="flight-list.html">Lịch bay</a></li>
+                    <li><a href="ho-tro.html">Hỗ trợ</a></li>
+                    <li><a href="lien-he.html">Liên hệ</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Trip Type Banner - Will be dynamically filled -->
+    <div class="trip-type-banner">
+        <div class="container">
+            <div id="trip-type-indicator"></div>
+        </div>
+    </div>
+
+    <section class="flight-list-header">
+        <div class="container">
+            <div id="search-summary">
+                <h2>Đang tải thông tin chuyến bay...</h2>
+            </div>
+        </div>
+    </section>
+
+    <section class="flight-list-container">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="flight-filters">
+                        <h2>Bộ lọc</h2>
+                        
+                        <div class="filter-section">
+                            <h3>Hãng hàng không</h3>
+                            <div class="filter-options">
+                                <label>
+                                    <input type="checkbox" name="airline" value="VN"> Vietnam Airlines
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="airline" value="VJ"> Vietjet Air
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="airline" value="BL"> Jetstar Pacific
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="airline" value="QH"> Bamboo Airways
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-section">
+                            <h3>Thời gian khởi hành</h3>
+                            <div class="filter-options">
+                                <label>
+                                    <input type="checkbox" name="depart-time" value="early-morning"> Sáng sớm (00:00 - 06:00)
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="depart-time" value="morning"> Buổi sáng (06:00 - 12:00)
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="depart-time" value="afternoon"> Buổi chiều (12:00 - 18:00)
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="depart-time" value="evening"> Buổi tối (18:00 - 24:00)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-section">
+                            <h3>Mức giá</h3>
+                            <div class="filter-options">
+                                <div class="price-range">
+                                    <input type="range" id="price-range" min="500000" max="10000000" step="100000" value="10000000">
+                                    <span id="price-value">10.000.000đ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trip summary info box - Will show dynamically for round trips -->
+                    <div id="trip-summary-box" class="trip-summary-box hidden">
+                        <h3><i class="fas fa-info-circle"></i> Thông tin chuyến bay</h3>
+                        <div id="trip-summary-content"></div>
+                    </div>
+                </div>
+                
+                <div class="col-md-9">
+                    <div id="flight-list">
+                        <!-- Flight cards will be populated by JavaScript -->
+                        <div class="loading">Đang tải danh sách chuyến bay...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>FlyViet</h3>
+                    <p>Đặt vé máy bay trực tuyến nhanh chóng, tiện lợi với giá tốt nhất.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h4>Thông tin</h4>
+                    <ul>
+                        <li><a href="#">Về chúng tôi</a></li>
+                        <li><a href="#">Điều khoản sử dụng</a></li>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                        <li><a href="#">Câu hỏi thường gặp</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Hỗ trợ</h4>
+                    <ul>
+                        <li><a href="#">Trung tâm trợ giúp</a></li>
+                        <li><a href="#">Hướng dẫn đặt vé</a></li>
+                        <li><a href="#">Chính sách hoàn hủy</a></li>
+                        <li><a href="#">Chính sách bảo hiểm</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Liên hệ</h4>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Đường ABC, Quận 1, TP.HCM</li>
+                        <li><i class="fas fa-phone"></i> 1900 1234</li>
+                        <li><i class="fas fa-envelope"></i> support@flyviet.vn</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 FlyViet. Tất cả các quyền được bảo lưu. ( Nhóm 12 )</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Load the flight search JS instead of the general script.js -->
+    <script src="../js/flight-search.js"></script>
+</body>
+</html>

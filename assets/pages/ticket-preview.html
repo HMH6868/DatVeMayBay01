@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xem vé - FlyViet</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/ticket-preview.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>FlyViet</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../../index.html">Trang chủ</a></li>
+                    <li><a href="khuyen-mai.html">Khuyến mãi</a></li>
+                    <li><a href="ticket-search.html">Lịch bay</a></li>
+                    <li><a href="ho-tro.html">Hỗ trợ</a></li>
+                    <li><a href="lien-he.html">Liên hệ</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="page-header">
+        <div class="container">
+            <h1>Vé máy bay của bạn</h1>
+            <p>Xem và in vé máy bay</p>
+        </div>
+    </section>
+
+    <section class="ticket-container">
+        <div class="container">
+            <div class="ticket-card">
+                <div class="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    <h2>Thanh toán thành công!</h2>
+                    <p>Cảm ơn bạn đã đặt vé qua FlyViet. Vé điện tử của bạn đã được tạo thành công. Bạn có thể xem, tải xuống hoặc in vé tại đây.</p>
+                </div>
+                
+                <div class="ticket-preview" id="ticket-to-print">
+                    <div class="ticket-header">
+                        <div class="ticket-airline">
+                            <div class="ticket-airline-logo">
+                                <img src="assets/images/Vietnam-Airlines.jpg" alt="Airline Logo">
+                            </div>
+                            <div class="ticket-airline-name"></div>
+                            <div class="ticket-flight-number"></div>
+                        </div>
+                        <div class="ticket-booking-reference">
+                            <p>Mã đặt chỗ</p>
+                            <strong></strong>
+                        </div>
+                    </div>
+                    
+                    <div class="ticket-content">
+                        <div class="flight-info">
+                            <div class="flight-route">
+                                <div class="airport">
+                                    <div class="airport-code"></div>
+                                    <div class="airport-name"></div>
+                                </div>
+                                <div class="flight-path">
+                                    <div class="flight-path-line"></div>
+                                    <div class="flight-path-icon">
+                                        <i class="fas fa-plane"></i>
+                                    </div>
+                                    <div class="flight-path-line"></div>
+                                </div>
+                                <div class="airport">
+                                    <div class="airport-code"></div>
+                                    <div class="airport-name"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flight-details">
+                            <div class="flight-detail">
+                                <div class="detail-label">Ngày</div>
+                                <div class="detail-value"></div>
+                            </div>
+                            <div class="flight-detail">
+                                <div class="detail-label">Giờ khởi hành</div>
+                                <div class="detail-value"></div>
+                            </div>
+                            <div class="flight-detail">
+                                <div class="detail-label">Giờ đến</div>
+                                <div class="detail-value"></div>
+                            </div>
+                            <div class="flight-detail">
+                                <div class="detail-label">Cổng</div>
+                                <div class="detail-value">N/A</div>
+                            </div>
+                            <div class="flight-detail">
+                                <div class="detail-label">Ghế</div>
+                                <div class="detail-value">N/A</div>
+                            </div>
+                            <div class="flight-detail">
+                                <div class="detail-label">Hạng ghế</div>
+                                <div class="detail-value"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="passenger-info">
+                            <h3>Thông tin hành khách</h3>
+                            <div class="passenger-details">
+                                <!-- Passenger details will be populated by script.js -->
+                            </div>
+                        </div>
+                        
+                        <div class="ticket-barcode">
+                            <img src="https://via.placeholder.com/300x80?text=BARCODE" alt="Barcode" class="barcode-img">
+                            <div class="barcode-text"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn-print" onclick="printTicket()">
+                        <i class="fas fa-print"></i> In vé
+                    </button>
+                    <button class="btn-download">
+                        <i class="fas fa-download"></i> Tải xuống PDF
+                    </button>
+                    <button class="btn-email">
+                        <i class="fas fa-envelope"></i> Gửi qua email
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>FlyViet</h3>
+                    <p>Đặt vé máy bay trực tuyến nhanh chóng, tiện lợi với giá tốt nhất.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h4>Thông tin</h4>
+                    <ul>
+                        <li><a href="#">Về chúng tôi</a></li>
+                        <li><a href="#">Điều khoản sử dụng</a></li>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                        <li><a href="#">Câu hỏi thường gặp</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Hỗ trợ</h4>
+                    <ul>
+                        <li><a href="#">Trung tâm trợ giúp</a></li>
+                        <li><a href="#">Hướng dẫn đặt vé</a></li>
+                        <li><a href="#">Chính sách hoàn hủy</a></li>
+                        <li><a href="#">Chính sách bảo hiểm</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Liên hệ</h4>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Đường ABC, Quận 1, TP.HCM</li>
+                        <li><i class="fas fa-phone"></i> 1900 1234</li>
+                        <li><i class="fas fa-envelope"></i> support@flyviet.vn</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 FlyViet. Tất cả các quyền được bảo lưu. ( Nhóm 12 )</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/script.js"></script>
+    <script src="../js/ticket-preview.js"></script>
+</body>
+</html>

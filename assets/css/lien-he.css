@@ -1,0 +1,130 @@
+/* General body and container improvements */
+/* Body styles removed to rely on global styles.css for consistency */
+main .container {
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+main h1, main h2 { /* Scoped to main content area */
+    color: #2c3e50; /* Darker, professional heading color */
+}
+main h1 { /* Scoped to main content area */
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2.5rem;
+}
+main > section > .container > p:first-of-type { /* Intro paragraph */
+    text-align: center;
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 40px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Contact Info Section */
+section#contact .contact-info { /* Made selector more specific */
+    background-color: #f8f9fa;
+    padding: 30px;
+    border-radius: 8px;
+    margin-bottom: 40px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+section#contact .contact-info h2 { /* Made selector more specific */
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+    display: inline-block;
+}
+section#contact .contact-info p { /* Made selector more specific */
+    font-size: 1rem;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+}
+section#contact .contact-info p i { /* Made selector more specific */
+    margin-right: 12px;
+    color: #007bff;
+    font-size: 1.2rem;
+    width: 20px; /* For alignment */
+    text-align: center;
+}
+section#contact .contact-info p strong { /* Made selector more specific */
+    min-width: 100px; /* Align labels */
+    display: inline-block;
+}
+
+/* Contact Form Section */
+section#contact .contact-form { /* Made selector more specific for consistency, though not strictly necessary for the bug */
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+section#contact .contact-form h2 { /* Made selector more specific */
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    text-align: center;
+}
+section#contact .form-group { /* Made selector more specific */
+    margin-bottom: 20px;
+}
+section#contact .form-group label { /* Made selector more specific */
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #495057;
+}
+section#contact .form-group input[type="text"],
+section#contact .form-group input[type="email"],
+section#contact .form-group textarea { /* Made selector more specific */
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+section#contact .form-group input[type="text"]:focus,
+section#contact .form-group input[type="email"]:focus,
+section#contact .form-group textarea:focus { /* Made selector more specific */
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    outline: none;
+}
+section#contact .form-group textarea { /* Made selector more specific */
+    resize: vertical;
+    min-height: 120px;
+}
+section#contact .contact-form .btn { /* Made selector more specific */
+    background-color: #007bff;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: block;
+    width: auto;
+    margin: 20px auto 0; /* Center button */
+}
+section#contact .contact-form .btn:hover { /* Made selector more specific */
+    background-color: #0056b3;
+}
+
+/* Responsive adjustments if needed */
+@media (max-width: 768px) {
+    main h1 { /* Scoped to main content area */
+        font-size: 2rem;
+    }
+    section#contact .contact-info h2, section#contact .contact-form h2 { /* Made selector more specific */
+        font-size: 1.5rem;
+    }
+    section#contact .contact-info, section#contact .contact-form { /* Made selector more specific */
+        padding: 20px;
+    }
+}

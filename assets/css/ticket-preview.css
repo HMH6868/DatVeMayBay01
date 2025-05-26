@@ -1,0 +1,334 @@
+/* Ticket preview page specific styles */
+.page-header {
+    background-color: #f8f9fa;
+    padding: 30px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.ticket-container {
+    padding: 40px 0;
+}
+
+.ticket-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.success-message {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.success-message i {
+    font-size: 60px;
+    color: #28a745;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.success-message h2 {
+    color: #28a745;
+    margin-bottom: 15px;
+}
+
+.success-message p {
+    color: #6c757d;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.ticket-preview {
+    border: 1px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+/* Define styles for printed ticket */
+@media print {
+    header, footer, .action-buttons, .success-message, .page-header {
+        display: none !important;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background: white;
+    }
+
+    .ticket-container, .container, .ticket-card {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .ticket-preview {
+        border: 1px solid #000;
+        page-break-inside: avoid;
+        padding: 15px;
+    }
+
+    .ticket-airline-logo {
+        max-width: 120px;
+    }
+}
+
+.ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.ticket-airline-logo {
+    max-width: 150px;
+}
+
+.ticket-airline-name {
+    font-weight: 700;
+    font-size: 20px;
+}
+
+.ticket-flight-number {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.ticket-booking-reference {
+    background-color: #f8f9fa;
+    padding: 8px 15px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.ticket-booking-reference p {
+    margin: 0;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.ticket-booking-reference strong {
+    display: block;
+    font-size: 18px;
+    color: #212529;
+}
+
+.ticket-content {
+    margin-bottom: 30px;
+}
+
+.flight-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+
+.flight-route {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+}
+
+.airport {
+    text-align: center;
+    flex: 1;
+}
+
+.airport-code {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.airport-name {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.flight-path {
+    display: flex;
+    align-items: center;
+    margin: 0 20px;
+}
+
+.flight-path-line {
+    flex: 1;
+    height: 2px;
+    background-color: #dee2e6;
+    position: relative;
+}
+
+.flight-path-icon {
+    font-size: 24px;
+    color: #0d6efd;
+    margin: 0 10px;
+}
+
+.flight-details {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+
+.flight-detail {
+    flex: 1;
+    text-align: center;
+    padding: 0 15px;
+}
+
+.detail-label {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.detail-value {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.passenger-info {
+    margin-bottom: 30px;
+}
+
+.passenger-info h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.passenger-details {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.passenger-detail {
+    width: 50%;
+    margin-bottom: 15px;
+    padding-right: 15px;
+}
+
+.passenger-detail strong {
+    display: block;
+    font-size: 14px;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.passenger-detail span {
+    font-size: 16px;
+}
+
+.ticket-barcode {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #dee2e6;
+}
+
+.barcode-img {
+    max-width: 300px;
+    margin-bottom: 10px;
+}
+
+.barcode-text {
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: #212529;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.btn-print {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-print:hover {
+    background-color: #0b5ed7;
+}
+
+.btn-download {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #198754;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-download:hover {
+    background-color: #157347;
+}
+
+.btn-email {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-email:hover {
+    background-color: #5c636a;
+}
+
+@media (max-width: 768px) {
+    .flight-info {
+        flex-direction: column;
+    }
+
+    .flight-details {
+        flex-wrap: wrap;
+    }
+
+    .flight-detail {
+        width: 50%;
+        margin-bottom: 15px;
+    }
+
+    .passenger-detail {
+        width: 100%;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .btn-print, .btn-download, .btn-email {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+}

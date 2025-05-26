@@ -1,0 +1,284 @@
+/* Breadcrumb styles */
+.breadcrumb {
+    padding: 15px 0; /* Increased padding */
+    margin-top: 0; /* Removed negative margin */
+    margin-bottom: 20px; /* Added bottom margin */
+    background-color: transparent; /* Removed background */
+    box-shadow: none; /* Removed shadow */
+    border-bottom: 1px solid #eee; /* Added subtle border */
+}
+.breadcrumb ul {
+    display: flex;
+    list-style: none;
+    padding-left: 0; /* Removed default padding */
+}
+.breadcrumb li {
+    color: #555; /* Darker text */
+    font-size: 15px; /* Slightly larger font */
+}
+.breadcrumb li:not(:last-child):after {
+    content: '/'; /* Changed separator */
+    margin: 0 12px; /* Increased spacing */
+    color: #aaa; /* Lighter separator color */
+}
+.breadcrumb a {
+    color: #007bff; /* Standard link blue */
+    text-decoration: none;
+    font-weight: 500; /* Slightly bolder */
+}
+.breadcrumb a:hover {
+    text-decoration: underline;
+    color: #0056b3; /* Darker blue on hover */
+}
+
+/* FAQ accordion styles */
+.faq-search {
+    position: relative;
+    margin-bottom: 40px; /* Increased margin */
+}
+.faq-search input {
+    width: 100%;
+    padding: 18px 25px; /* Increased padding */
+    border-radius: 8px; /* Less rounded */
+    border: 1px solid #ced4da; /* Standard border color */
+    font-size: 16px;
+    padding-left: 55px; /* Adjusted for icon */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07); /* Softer shadow */
+}
+.faq-search input::placeholder {
+    color: #6c757d;
+}
+.faq-search i {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%); /* Centered icon */
+    color: #007bff;
+    font-size: 20px; /* Slightly larger icon */
+}
+.faq-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px; /* Increased gap */
+    margin-bottom: 40px; /* Increased margin */
+}
+.faq-category {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6; /* Standard border */
+    border-radius: 25px; /* Pill shape */
+    padding: 10px 20px; /* Increased padding */
+    font-size: 15px; /* Slightly larger font */
+    color: #343a40; /* Darker text */
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+.faq-category:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+.faq-category.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+    font-weight: 500;
+}
+.accordion-item {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 20px; /* Increased margin */
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+}
+.accordion-item:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+.accordion-header {
+    padding: 0;
+    background-color: #fff;
+    border: none; /* Removed border */
+    border-bottom: 1px solid #f1f1f1; /* Subtle separator for collapsed state */
+}
+.accordion-item:last-child .accordion-header {
+     border-bottom: none; /* No border for last item header when collapsed */
+}
+.accordion-button {
+    width: 100%;
+    text-align: left;
+    padding: 20px 25px; /* Increased padding */
+    font-size: 17px; /* Slightly larger font */
+    font-weight: 600;
+    color: #343a40; /* Darker text */
+    background-color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background-color 0.2s ease;
+}
+.accordion-button:hover {
+    background-color: #f8f9fa;
+}
+.accordion-button i:first-child { /* Icon before text */
+    margin-right: 18px; /* Increased margin */
+    color: #007bff;
+    font-size: 20px;
+    width: 22px; /* Fixed width for alignment */
+    text-align: center;
+}
+.accordion-button i.fa-chevron-down { /* Chevron icon */
+    transition: transform 0.3s ease;
+    color: #495057; /* Darker chevron */
+    font-size: 14px; /* Smaller chevron */
+}
+.accordion-button.active {
+    background-color: #f8f9fa; /* Light background for active button */
+}
+.accordion-button.active i.fa-chevron-down {
+    transform: rotate(180deg);
+}
+.accordion-content {
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.35s ease; /* Smoother transition */
+    background-color: #fcfdff; /* Slightly off-white background */
+    border-top: 1px solid #e9ecef; /* Separator line */
+}
+.accordion-content.active {
+    max-height: 1000px; /* Ensure enough space */
+    padding: 25px 30px; /* Increased padding */
+}
+.accordion-content p, .accordion-content ul, .accordion-content ol {
+    margin-bottom: 15px; /* Spacing for content elements */
+    line-height: 1.7; /* Improved readability */
+}
+ .accordion-content p:last-child,
+ .accordion-content ul:last-child,
+ .accordion-content ol:last-child {
+    margin-bottom: 0;
+}
+.accordion-content strong {
+    color: #212529;
+}
+
+/* Enhanced contact options */
+.contact-options {
+    display: grid; /* Using grid for better alignment */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive columns */
+    gap: 25px; /* Increased gap */
+    margin-top: 40px; /* Increased margin */
+}
+.contact-option {
+    /* flex: 1; */ /* Not needed with grid */
+    /* min-width: 250px; */ /* Handled by grid */
+    background-color: #fff;
+    border-radius: 12px; /* More rounded */
+    padding: 30px; /* Increased padding */
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border: 1px solid #e0e0e0; /* Slightly darker border */
+}
+.contact-option:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
+.contact-option i {
+    font-size: 40px; /* Larger icon */
+    color: #007bff;
+    margin-bottom: 20px; /* Increased margin */
+    display: block;
+}
+.contact-option h4 {
+    color: #212529;
+    margin-bottom: 12px; /* Increased margin */
+    font-size: 20px; /* Larger font */
+    font-weight: 600;
+}
+.contact-option p {
+    color: #555; /* Darker paragraph text */
+    margin-bottom: 10px; /* Increased margin */
+    font-size: 15px;
+    line-height: 1.6;
+}
+.contact-option .btn-secondary { /* Styling for buttons inside contact options */
+    margin-top: 20px;
+    display: inline-block;
+    padding: 10px 25px;
+    font-weight: 500;
+}
+
+
+/* Support CTA section */
+.support-cta {
+    text-align: center;
+    padding: 50px 0; /* Increased padding */
+    border-top: 1px solid #e9ecef;
+    margin-top: 50px; /* Increased margin */
+    background-color: #f8f9fa; /* Light background */
+    border-radius: 8px;
+}
+.support-cta p {
+    font-size: 20px; /* Larger font */
+    color: #343a40;
+    margin-bottom: 25px; /* Increased margin */
+    font-weight: 500;
+}
+
+/* Chat widget */
+.chat-widget {
+    position: fixed;
+    bottom: 25px; /* Adjusted position */
+    right: 25px; /* Adjusted position */
+    width: 65px; /* Slightly larger */
+    height: 65px; /* Slightly larger */
+    background-color: #007bff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 28px; /* Larger icon */
+    box-shadow: 0 8px 20px rgba(0,123,255,0.3); /* Enhanced shadow */
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.25s ease-in-out;
+}
+.chat-widget:hover {
+    transform: scale(1.08);
+    background-color: #0069d9; /* Darker blue on hover */
+    box-shadow: 0 10px 25px rgba(0,123,255,0.4);
+}
+
+/* General improvements */
+.section-padding {
+    padding-top: 50px;
+    padding-bottom: 50px;
+}
+.search-box h2 { /* Assuming .search-box wraps FAQ title */
+    font-size: 2.2rem; /* Larger FAQ title */
+    margin-bottom: 15px;
+    color: #333;
+}
+.section-intro {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 30px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center; /* Center intro text if appropriate */
+}
+.more-help h3 {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    margin-top: 40px; /* Add top margin */
+    color: #333;
+}
+.more-help p {
+    font-size: 1.05rem;
+    color: #555;
+    margin-bottom: 25px;
+}

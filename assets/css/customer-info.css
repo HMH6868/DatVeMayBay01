@@ -1,0 +1,278 @@
+/* Customer info page specific styles */
+body {
+    background-color: #f0f2f5; /* Consistent with updated styles.css */
+}
+
+.page-header {
+    background-color: #ffffff;
+    padding: 25px 0;
+    border-bottom: 1px solid #ced4da;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    text-align: center; /* Center header text */
+}
+.page-header h1 {
+    font-size: 2rem;
+    color: #343a40;
+    margin-bottom: 5px;
+}
+.page-header p {
+    font-size: 1rem;
+    color: #6c757d;
+}
+
+.customer-info-container {
+    padding: 30px 0;
+}
+
+.form-container {
+    background-color: #ffffff;
+    border-radius: 10px; /* More rounded */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); /* Softer shadow */
+    padding: 35px; /* Increased padding */
+    margin-bottom: 30px;
+}
+
+.form-section {
+    margin-bottom: 35px; /* Increased spacing */
+}
+
+.form-section h3 {
+    font-size: 1.4rem; /* Larger section titles */
+    color: #343a40;
+    margin-bottom: 25px; /* Increased spacing */
+    padding-bottom: 12px; /* Increased padding */
+    border-bottom: 1px solid #e0e0e0; /* Lighter border */
+}
+.form-section h4 { /* For passenger number */
+    font-size: 1.1rem;
+    color: #495057;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.passenger-form { /* Style for each passenger's form section */
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+    background-color: #fdfdfd; /* Slightly off-white background */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.passenger-form:last-child {
+    margin-bottom: 0; /* No bottom margin for the last passenger form in the container */
+}
+
+.form-group {
+    margin-bottom: 22px; /* Slightly increased spacing */
+}
+
+.form-group label {
+    display: block; /* Default for text input labels */
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #495057;
+}
+
+/* Specific styling for labels containing checkboxes */
+.form-group label:has(input[type="checkbox"]) {
+    display: flex; /* Use flex for checkbox alignment */
+    align-items: center;
+    font-weight: normal; /* Typically normal weight for checkbox labels */
+    margin-bottom: 12px; /* Consistent spacing */
+    cursor: pointer;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.form-group input[type="checkbox"] {
+    width: auto; /* Override full width for checkboxes */
+    margin-right: 10px; /* Space between checkbox and text */
+    padding: 0; /* No padding for checkboxes */
+    accent-color: #007bff; /* Modern checkbox color */
+}
+
+.form-group input:focus, .form-group select:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.required:after {
+    content: " *";
+    color: #e74c3c; /* Slightly softer red */
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px; /* Increased gap */
+}
+
+.form-col {
+    flex: 1;
+    min-width: 220px; /* Adjusted min-width */
+}
+
+.btn-continue { /* Will inherit from .btn-primary in styles.css if class is changed */
+    display: block;
+    width: 100%;
+    padding: 14px; /* Slightly larger padding */
+    background-color: #007bff; /* Consistent primary color */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.05rem; /* Slightly larger font */
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-top: 15px; /* Add some top margin */
+}
+
+.btn-continue:hover {
+    background-color: #0069d9;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.summary-card {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    padding: 25px; /* Increased padding */
+    position: sticky;
+    top: 120px; /* Adjusted for sticky header */
+}
+
+.summary-card h3 {
+    font-size: 1.4rem;
+    color: #343a40;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.flight-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px; /* Increased spacing */
+}
+.flight-summary-header h3 { /* For airline name in summary */
+    font-size: 1.1rem;
+    color: #343a40;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.flight-route {
+    font-size: 0.95rem; /* Slightly smaller */
+    color: #6c757d;
+}
+
+.flight-summary-details {
+    background-color: #f8f9fa; /* Light background for details block */
+    padding: 18px; /* Increased padding */
+    border-radius: 6px; /* More rounded */
+    margin-bottom: 25px; /* Increased spacing */
+}
+
+.flight-summary-details > div {
+    margin-bottom: 12px; /* Increased spacing */
+    font-size: 0.95rem;
+    color: #495057;
+}
+
+.flight-summary-details > div:last-child {
+    margin-bottom: 0;
+}
+
+.flight-date, .flight-time, .flight-duration, .flight-class {
+    display: flex;
+    align-items: center;
+}
+
+.flight-date:before, .flight-time:before, .flight-duration:before, .flight-class:before {
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    margin-right: 12px; /* Increased spacing */
+    width: 20px;
+    text-align: center;
+    color: #007bff; /* Icon color */
+}
+
+.flight-date:before { content: "\f073"; }
+.flight-time:before { content: "\f017"; }
+.flight-duration:before { content: "\f252"; }
+.flight-class:before { content: "\f5af"; }
+
+.flight-price {
+    font-size: 1.8rem; /* Adjusted size */
+    font-weight: 700;
+    color: #007bff;
+    text-align: right;
+    margin-top: 25px; /* Increased spacing */
+}
+
+.notes {
+    margin-top: 25px; /* Adjusted spacing */
+    font-size: 0.85rem; /* Slightly smaller */
+    color: #6c757d;
+    line-height: 1.5;
+}
+.notes i {
+    margin-right: 5px;
+    color: #007bff;
+}
+
+@media (max-width: 992px) { /* Adjusted breakpoint */
+    .form-row {
+        flex-direction: column;
+        gap: 0; /* Remove gap when stacked */
+    }
+    .form-col {
+        min-width: 100%; /* Full width on smaller screens */
+    }
+    .summary-card {
+        position: static;
+        margin-top: 30px; /* Add margin when not sticky */
+        margin-bottom: 30px;
+    }
+}
+
+/* Add styles for the form-hint */
+.form-hint {
+    display: block;
+    color: #666;
+    font-size: 12px;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* Ensure input[type="date"] has same styling as other inputs */
+input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+}
+
+/* Style for invalid form fields */
+input:invalid, select:invalid {
+    border-color: #0069d9;
+}
+
+input:focus:invalid, select:focus:invalid {
+    box-shadow: 0 0 0 2px rgba(24, 97, 206, 0.2);
+}
