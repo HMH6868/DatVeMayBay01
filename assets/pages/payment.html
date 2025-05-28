@@ -1101,6 +1101,19 @@
             const numChildren = parseInt(selectedFlightData.children) || 0;
             const numInfants = parseInt(selectedFlightData.infants) || 0;
             
+            // Lấy user ID nếu người dùng đã đăng nhập
+            let userId = null;
+            const loggedInUserJson = sessionStorage.getItem('user');
+            if (loggedInUserJson) {
+                try {
+                    const loggedInUser = JSON.parse(loggedInUserJson);
+                    userId = loggedInUser.user_id;
+                    console.log('Including user ID in booking:', userId);
+                } catch (error) {
+                    console.error('Error parsing user data for ID:', error);
+                }
+            }
+            
             // Đảm bảo rằng thông tin hành khách đã có type và đầy đủ các trường
             let passengers = customerInfo.passengers || [];
             
@@ -1135,33 +1148,30 @@
                 return;
             }
             
-            // Ensure the contact person information is valid
-            if (!customerInfo.contactPerson) {
-                console.error('Missing contact person info');
-                alert('Thiếu thông tin người liên hệ. Vui lòng quay lại bước thông tin hành khách.');
-                hideProcessingMessage();
-                window.location.href = 'customer-info.html';
-                return;
+            // Kiểm tra xem có thông tin người dùng đăng nhập không
+            let formattedCustomerInfo;
+            
+            if (loggedInUserJson) {
+                try {
+                    const loggedInUser = JSON.parse(loggedInUserJson);
+                    console.log('Using logged-in user info for contact:', loggedInUser);
+                    
+                    // Sử dụng thông tin người dùng đăng nhập làm thông tin liên hệ
+                    formattedCustomerInfo = {
+                        fullName: loggedInUser.fullname,
+                        email: loggedInUser.email,
+                        phone: loggedInUser.phone || '',
+                        seatClass: selectedFlightData.seatClass || "ECONOMY"
+                    };
+                } catch (error) {
+                    console.error('Error parsing logged-in user data:', error);
+                    // Fallback to contact person info if there's an error
+                    formattedCustomerInfo = getContactInfoFallback();
+                }
+            } else {
+                // Không có người dùng đăng nhập, sử dụng thông tin liên hệ đã nhập
+                formattedCustomerInfo = getContactInfoFallback();
             }
-            
-            const contactPerson = customerInfo.contactPerson;
-            
-            // Validate contact person fields
-            if (!contactPerson.fullName || !contactPerson.email || !contactPerson.phone) {
-                console.error('Missing required contact person fields:', contactPerson);
-                alert('Thiếu thông tin người liên hệ (tên/email/số điện thoại). Vui lòng quay lại bước thông tin.');
-                hideProcessingMessage();
-                window.location.href = 'customer-info.html';
-                return;
-            }
-            
-            // Create formatted customer info object for API
-            const formattedCustomerInfo = {
-                fullName: contactPerson.fullName,
-                email: contactPerson.email,
-                phone: contactPerson.phone,
-                seatClass: selectedFlightData.seatClass || "ECONOMY"
-            };
             
             // Lấy thông tin thanh toán dựa vào phương thức thanh toán
             let transactionInfo = null;
@@ -1259,7 +1269,8 @@
                     numAdults: numAdults,
                     numChildren: numChildren,
                     numInfants: numInfants
-                }
+                },
+                userId: userId
             };
             
             console.log('Sending booking data:', apiPayload);
@@ -1445,6 +1456,37 @@
                     type: passenger.type || passenger.passengerType || 'ADULT'  // Default to ADULT if not specified
                 };
             });
+        }
+
+        // Function to get contact information from previously entered data as fallback
+        function getContactInfoFallback() {
+            // Ensure the contact person information is valid
+            if (!customerInfo.contactPerson) {
+                console.error('Missing contact person info');
+                alert('Thiếu thông tin người liên hệ. Vui lòng quay lại bước thông tin hành khách.');
+                hideProcessingMessage();
+                window.location.href = 'customer-info.html';
+                throw new Error('Missing contact person info');
+            }
+            
+            const contactPerson = customerInfo.contactPerson;
+            
+            // Validate contact person fields
+            if (!contactPerson.fullName || !contactPerson.email || !contactPerson.phone) {
+                console.error('Missing required contact person fields:', contactPerson);
+                alert('Thiếu thông tin người liên hệ (tên/email/số điện thoại). Vui lòng quay lại bước thông tin.');
+                hideProcessingMessage();
+                window.location.href = 'customer-info.html';
+                throw new Error('Missing required contact person fields');
+            }
+            
+            // Create formatted customer info object for API
+            return {
+                fullName: contactPerson.fullName,
+                email: contactPerson.email,
+                phone: contactPerson.phone,
+                seatClass: selectedFlightData.seatClass || "ECONOMY"
+            };
         }
     </script>
 </body>

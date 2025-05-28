@@ -615,33 +615,98 @@ function displayFlights(departure, destination, isReturnFlight = false) {
                         // Clear the departure flight since we've combined them
                         sessionStorage.removeItem('selectedDepartureFlight');
                         
-                        // Redirect to customer info page with both flights selected after a brief delay
-                        setTimeout(() => {
-                            window.location.href = 'customer-info.html';
-                        }, 1500);
+                        // Check if user is logged in
+                        const sessionId = localStorage.getItem('sessionId') || sessionStorage.getItem('sessionId');
+
+                        if (!sessionId) {
+                            // User not logged in, store pending flight and redirect to login
+                            sessionStorage.setItem('pendingFlightSelection', JSON.stringify({
+                                ...departureFlight,
+                                returnDate: searchParams.get('return-date'),
+                                isRoundTrip: true, // Explicitly set round-trip flag
+                                returnFlight: {
+                                    ...selectedFlight,
+                                    departDate: searchParams.get('return-date'),
+                                    seatClass: searchParams.get('seat-class') || "ECONOMY",
+                                    seatClassName: getSeatClassName(searchParams.get('seat-class') || "ECONOMY"),
+                                    finalPrice: getPriceForSeatClass(selectedFlight, searchParams.get('seat-class') || "ECONOMY")
+                                }
+                            }));
+                            sessionStorage.removeItem('selectedDepartureFlight'); // Clear departure flight as it's now part of pending
+                            sessionStorage.setItem('redirectAfterLogin', 'customer-info.html');
+                            alert('Vui lòng đăng nhập để tiếp tục đặt vé.');
+                            setTimeout(() => {
+                                window.location.href = 'login.html';
+                            }, 500); // Shorter delay for login redirect
+                        } else {
+                            // User is logged in, proceed to customer info page
+                            sessionStorage.setItem('selectedFlight', JSON.stringify({
+                                ...departureFlight,
+                                returnDate: searchParams.get('return-date'),
+                                isRoundTrip: true, // Explicitly set round-trip flag
+                                returnFlight: {
+                                    ...selectedFlight,
+                                    departDate: searchParams.get('return-date'),
+                                    seatClass: searchParams.get('seat-class') || "ECONOMY",
+                                    seatClassName: getSeatClassName(searchParams.get('seat-class') || "ECONOMY"),
+                                    finalPrice: getPriceForSeatClass(selectedFlight, searchParams.get('seat-class') || "ECONOMY")
+                                }
+                            }));
+                            
+                            // Clear the departure flight since we've combined them
+                            sessionStorage.removeItem('selectedDepartureFlight');
+                            
+                            // Redirect to customer info page with both flights selected after a brief delay
+                            setTimeout(() => {
+                                window.location.href = 'customer-info.html';
+                            }, 1500);
+                        }
                         
                     } else {
                         // One-way trip
                         // Show selection confirmation
                         showSelectionConfirmation(selectedFlight, false);
                         
-                    sessionStorage.setItem('selectedFlight', JSON.stringify({
-                        ...selectedFlight,
-                        departDate: searchParams.get('depart-date'),
-                            returnDate: null, // Explicitly set to null for one-way
-                            isRoundTrip: false, // Explicitly set one-way flag
-                        adults: searchParams.get('adults') || "1",
-                        children: searchParams.get('children') || "0",
-                        infants: searchParams.get('infants') || "0",
-                        seatClass: searchParams.get('seat-class') || "ECONOMY",
-                        seatClassName: getSeatClassName(searchParams.get('seat-class') || "ECONOMY"),
-                            finalPrice: getPriceForSeatClass(selectedFlight, searchParams.get('seat-class') || "ECONOMY")
-                    }));
-                    
-                        // Redirect directly to customer info page for one-way after a brief delay
-                        setTimeout(() => {
-                    window.location.href = 'customer-info.html';
-                        }, 1500);
+                        // Check if user is logged in
+                        const sessionId = localStorage.getItem('sessionId') || sessionStorage.getItem('sessionId');
+
+                        if (!sessionId) {
+                            // User not logged in, store pending flight and redirect to login
+                            sessionStorage.setItem('pendingFlightSelection', JSON.stringify({
+                                ...selectedFlight,
+                                departDate: searchParams.get('depart-date'),
+                                returnDate: null, // Explicitly set to null for one-way
+                                isRoundTrip: false, // Explicitly set one-way flag
+                                adults: searchParams.get('adults') || "1",
+                                children: searchParams.get('children') || "0",
+                                infants: searchParams.get('infants') || "0",
+                                seatClass: searchParams.get('seat-class') || "ECONOMY",
+                                seatClassName: getSeatClassName(searchParams.get('seat-class') || "ECONOMY"),
+                                finalPrice: getPriceForSeatClass(selectedFlight, searchParams.get('seat-class') || "ECONOMY")
+                            }));
+                            sessionStorage.setItem('redirectAfterLogin', 'customer-info.html');
+                            alert('Vui lòng đăng nhập để tiếp tục đặt vé.');
+                            setTimeout(() => {
+                                window.location.href = 'login.html';
+                            }, 500); // Shorter delay for login redirect
+                        } else {
+                            // User is logged in, proceed to customer info page
+                            sessionStorage.setItem('selectedFlight', JSON.stringify({
+                                ...selectedFlight,
+                                departDate: searchParams.get('depart-date'),
+                                returnDate: null, // Explicitly set to null for one-way
+                                isRoundTrip: false, // Explicitly set one-way flag
+                                adults: searchParams.get('adults') || "1",
+                                children: searchParams.get('children') || "0",
+                                infants: searchParams.get('infants') || "0",
+                                seatClass: searchParams.get('seat-class') || "ECONOMY",
+                                seatClassName: getSeatClassName(searchParams.get('seat-class') || "ECONOMY"),
+                                finalPrice: getPriceForSeatClass(selectedFlight, searchParams.get('seat-class') || "ECONOMY")
+                            }));
+                            setTimeout(() => {
+                                window.location.href = 'customer-info.html';
+                            }, 1500);
+                        }
                     }
                 });
             });
@@ -845,4 +910,4 @@ function getAvailableSeatsForClass(flight, seatClass) {
         default:
             return flight.seats_economy || 'N/A';
     }
-} 
+}

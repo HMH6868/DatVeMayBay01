@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết đặt chỗ - FlyViet</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .booking-details-container {
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .booking-details-container h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #007bff;
+        }
+        
+        .booking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .booking-number {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .booking-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .status-confirmed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 30px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .flight-card {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .flight-header {
+            background-color: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .flight-type {
+            font-weight: 600;
+        }
+        
+        .flight-number {
+            color: #6c757d;
+        }
+        
+        .flight-details {
+            padding: 20px;
+        }
+        
+        .flight-route {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .airport {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .airport-code {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .airport-name {
+            color: #6c757d;
+        }
+        
+        .flight-arrow {
+            flex: 1;
+            text-align: center;
+            color: #6c757d;
+            position: relative;
+        }
+        
+        .flight-arrow::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #e9ecef;
+            z-index: 1;
+        }
+        
+        .flight-arrow i {
+            position: relative;
+            background-color: white;
+            padding: 0 10px;
+            z-index: 2;
+        }
+        
+        .flight-times {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .departure-time, .arrival-time {
+            text-align: center;
+        }
+        
+        .time {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .date {
+            color: #6c757d;
+        }
+        
+        .flight-duration {
+            text-align: center;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        
+        .flight-info-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .flight-info-label {
+            width: 150px;
+            font-weight: 600;
+        }
+        
+        .flight-info-value {
+            flex: 1;
+        }
+        
+        .passenger-list {
+            margin-bottom: 30px;
+        }
+        
+        .passenger-card {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            padding: 15px 20px;
+        }
+        
+        .passenger-name {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .passenger-info {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .passenger-info-item {
+            margin-right: 30px;
+            margin-bottom: 10px;
+        }
+        
+        .passenger-info-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .passenger-info-value {
+            font-weight: 500;
+        }
+        
+        .payment-details, .contact-details {
+            margin-bottom: 30px;
+        }
+        
+        .detail-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .detail-label {
+            width: 200px;
+            font-weight: 600;
+        }
+        
+        .detail-value {
+            flex: 1;
+        }
+        
+        .price-summary {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .price-label {
+            font-weight: 500;
+        }
+        
+        .price-value {
+            font-weight: 600;
+        }
+        
+        .price-total {
+            border-top: 1px solid #e9ecef;
+            padding-top: 15px;
+            margin-top: 15px;
+            font-size: 18px;
+        }
+        
+        .price-total .price-value {
+            color: #007bff;
+        }
+        
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        .btn-back {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-back:hover {
+            background-color: #5a6268;
+        }
+        
+        .btn-cancel {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #c82333;
+        }
+        
+        .btn-print {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-print:hover {
+            background-color: #0069d9;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px 0;
+        }
+        
+        .loading i {
+            font-size: 40px;
+            color: #007bff;
+            animation: spin 1s infinite linear;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .flight-route {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .airport {
+                margin-bottom: 15px;
+            }
+            
+            .flight-arrow {
+                margin: 10px 0;
+            }
+            
+            .flight-arrow::before {
+                display: none;
+            }
+            
+            .flight-times {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .departure-time, .arrival-time {
+                margin-bottom: 15px;
+            }
+            
+            .flight-info-row, .detail-row {
+                flex-direction: column;
+            }
+            
+            .flight-info-label, .detail-label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>FlyViet</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../../index.html">Trang chủ</a></li>
+                    <li><a href="khuyen-mai.html">Khuyến mãi</a></li>
+                    <li><a href="ticket-search.html">Tra cứu vé</a></li>
+                    <li><a href="ho-tro.html">Hỗ trợ</a></li>
+                    <li><a href="lien-he.html">Liên hệ</a></li>
+                    <li><a href="login.html" title="Đăng nhập"><i class="fas fa-user"></i></a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div id="booking-loading" class="loading">
+                <i class="fas fa-spinner"></i>
+                <p>Đang tải dữ liệu...</p>
+            </div>
+            
+            <div id="booking-details" class="booking-details-container" style="display: none;">
+                <h2>Chi tiết đặt chỗ</h2>
+                
+                <div class="booking-header">
+                    <div class="booking-number">Mã đặt chỗ: <span id="booking-number"></span></div>
+                    <div id="booking-status" class="booking-status">Đã xác nhận</div>
+                </div>
+                
+                <h3 class="section-title">Thông tin chuyến bay</h3>
+                <div id="flights-container">
+                    <!-- Flight cards will be inserted here dynamically -->
+                </div>
+                
+                <h3 class="section-title">Thông tin hành khách</h3>
+                <div id="passengers-container" class="passenger-list">
+                    <!-- Passenger cards will be inserted here dynamically -->
+                </div>
+                
+                <h3 class="section-title">Thông tin liên hệ</h3>
+                <div class="contact-details">
+                    <div class="detail-row">
+                        <div class="detail-label">Họ tên:</div>
+                        <div id="contact-name" class="detail-value"></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Email:</div>
+                        <div id="contact-email" class="detail-value"></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Số điện thoại:</div>
+                        <div id="contact-phone" class="detail-value"></div>
+                    </div>
+                </div>
+                
+                <h3 class="section-title">Thông tin thanh toán</h3>
+                <div class="payment-details">
+                    <div class="detail-row">
+                        <div class="detail-label">Phương thức thanh toán:</div>
+                        <div id="payment-method" class="detail-value"></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Trạng thái thanh toán:</div>
+                        <div id="payment-status" class="detail-value"></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Ngày thanh toán:</div>
+                        <div id="payment-date" class="detail-value"></div>
+                    </div>
+                </div>
+                
+                <h3 class="section-title">Tổng chi phí</h3>
+                <div class="price-summary">
+                    <div id="price-details">
+                        <!-- Price rows will be inserted here dynamically -->
+                    </div>
+                    <div class="price-row price-total">
+                        <div class="price-label">Tổng cộng:</div>
+                        <div id="total-price" class="price-value"></div>
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button id="btn-back" class="btn-back">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </button>
+                    <div>
+                        <button id="btn-print" class="btn-print">
+                            <i class="fas fa-print"></i> In vé
+                        </button>
+                        <button id="btn-cancel" class="btn-cancel" style="display: none;">
+                            <i class="fas fa-times"></i> Hủy đặt chỗ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>FlyViet</h3>
+                    <p>Đặt vé máy bay trực tuyến nhanh chóng, tiện lợi với giá tốt nhất.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h4>Thông tin</h4>
+                    <ul>
+                        <li><a href="#">Về chúng tôi</a></li>
+                        <li><a href="#">Điều khoản sử dụng</a></li>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                        <li><a href="#">Câu hỏi thường gặp</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Hỗ trợ</h4>
+                    <ul>
+                        <li><a href="#">Trung tâm trợ giúp</a></li>
+                        <li><a href="#">Hướng dẫn đặt vé</a></li>
+                        <li><a href="#">Chính sách hoàn hủy</a></li>
+                        <li><a href="#">Chính sách bảo hiểm</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Liên hệ</h4>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Đường ABC, Quận 1, TP.HCM</li>
+                        <li><i class="fas fa-phone"></i> 1900 1234</li>
+                        <li><i class="fas fa-envelope"></i> support@flyviet.vn</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 FlyViet. Tất cả các quyền được bảo lưu. ( Nhóm 12 )</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/script.js"></script>
+    <script src="../js/booking-details.js"></script>
+</body>
+</html> 

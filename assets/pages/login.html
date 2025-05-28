@@ -265,5 +265,77 @@
     </footer>
 
     <script src="../js/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.querySelector('.login-form');
+            
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const rememberMe = document.getElementById('remember').checked;
+                
+                // Validate inputs
+                if (!email || !password) {
+                    alert('Vui lòng nhập đầy đủ thông tin đăng nhập');
+                    return;
+                }
+                
+                try {
+                    // Show loading state
+                    const submitBtn = document.querySelector('.btn-login');
+                    const originalBtnText = submitBtn.textContent;
+                    submitBtn.textContent = 'Đang đăng nhập...';
+                    submitBtn.disabled = true;
+                    
+                    // Call login API
+                    const response = await fetch('http://localhost:3000/api/users/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email, password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Restore button state
+                    submitBtn.textContent = originalBtnText;
+                    submitBtn.disabled = false;
+                    
+                    if (!response.ok) {
+                        alert(data.error || 'Đăng nhập thất bại');
+                        return;
+                    }
+                    
+                    // Save session data
+                    if (rememberMe) {
+                        localStorage.setItem('sessionId', data.session.sessionId);
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        localStorage.setItem('expireTime', data.session.expireTime);
+                    } else {
+                        sessionStorage.setItem('sessionId', data.session.sessionId);
+                        sessionStorage.setItem('user', JSON.stringify(data.user));
+                        sessionStorage.setItem('expireTime', data.session.expireTime);
+                    }
+                    
+                    // Check for a redirect URL after login
+                    const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+                    if (redirectUrl) {
+                        sessionStorage.removeItem('redirectAfterLogin'); // Clear the redirect URL
+                        window.location.href = redirectUrl;
+                    } else {
+                        // Default redirect to home page
+                        window.location.href = '../../index.html';
+                    }
+                    
+                } catch (error) {
+                    console.error('Error during login:', error);
+                    alert('Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại sau.');
+                }
+            });
+        });
+    </script>
 </body>
-</html> 
+</html>

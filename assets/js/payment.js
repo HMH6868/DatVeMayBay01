@@ -69,56 +69,136 @@ const paymentFormElements = document.querySelectorAll('form');
 const API_BASE_URL = 'http://localhost:3000/api';
 
 // Kiểm tra và lấy lại thông tin đặt vé khi trang payment được load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log("Payment page loaded");
-    
+
+    // Check for logged-in user session
+    const userSessionId = localStorage.getItem('userSessionId');
+    let loggedInUser = null;
+
+    if (userSessionId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/profile`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': userSessionId,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                loggedInUser = data.user;
+                console.log("Logged in user:", loggedInUser);
+
+                // Populate contact info fields if they exist on this page (optional, depending on HTML structure)
+                // This page payment.html doesn't have contact info fields, so this part is commented out
+                /*
+                const contactNameInput = document.getElementById('contact-name');
+                const contactEmailInput = document.getElementById('contact-email');
+                const contactPhoneInput = document.getElementById('contact-phone');
+
+                if (contactNameInput) contactNameInput.value = loggedInUser.fullname;
+                if (contactEmailInput) contactEmailInput.value = loggedInUser.email;
+                if (contactPhoneInput) contactPhoneInput.value = loggedInUser.phone;
+                */
+
+            } else {
+                console.warn("Failed to fetch user profile or session invalid.");
+                // Optionally clear invalid session ID
+                // localStorage.removeItem('userSessionId');
+            }
+        } catch (error) {
+            console.error("Error fetching user profile:", error);
+        }
+    } else {
+        console.log("No user session found.");
+    }
+
     // Kiểm tra xem đã có dữ liệu bookingData chưa
     if (!sessionStorage.getItem('bookingData')) {
         console.log("Không tìm thấy bookingData, tạo lại từ dữ liệu khác");
-        
+
         try {
             // Lấy thông tin từ sessionStorage
             const selectedFlightData = JSON.parse(sessionStorage.getItem('selectedFlight'));
-            const customerInfo = JSON.parse(sessionStorage.getItem('customerInfo'));
+            const customerInfo = JSON.parse(sessionStorage.getItem('customerInfo')); // This still contains passenger info
             const selectedServices = JSON.parse(sessionStorage.getItem('selectedServices')) || {};
             const promoCode = sessionStorage.getItem('promoCode') || '';
-            
+
             if (selectedFlightData && customerInfo) {
+                // Use loggedInUser info if available, otherwise use customerInfo contactPerson
+                const contactPersonInfo = loggedInUser ? {
+                    fullName: loggedInUser.fullname,
+                    email: loggedInUser.email,
+                    phone: loggedInUser.phone,
+                    seatClass: selectedFlightData.seatClass || 'ECONOMY' // Keep seatClass from flight data
+                } : {
+                    fullName: customerInfo.contactPerson ? customerInfo.contactPerson.fullName : customerInfo.fullName,
+                    email: customerInfo.contactPerson ? customerInfo.contactPerson.email : customerInfo.email,
+                    phone: customerInfo.contactPerson ? customerInfo.contactPerson.phone : customerInfo.phone,
+                    seatClass: selectedFlightData.seatClass || 'ECONOMY' // Keep seatClass from flight data
+                };
+
                 // Tạo bookingData
                 const bookingData = {
                     flightId: selectedFlightData.id || selectedFlightData.flight_id,
-                    customerInfo: {
-                        fullName: customerInfo.contactPerson ? customerInfo.contactPerson.fullName : customerInfo.fullName,
-                        email: customerInfo.contactPerson ? customerInfo.contactPerson.email : customerInfo.email,
-                        phone: customerInfo.contactPerson ? customerInfo.contactPerson.phone : customerInfo.phone,
-                        seatClass: selectedFlightData.seatClass || 'ECONOMY'
-                    },
+                    customerInfo: contactPersonInfo, // Use the determined contact info
                     passengers: customerInfo.passengers ? customerInfo.passengers.map(passenger => ({
                         fullName: passenger.fullName,
                         gender: passenger.gender,
                         dob: passenger.dob,
                         idNumber: passenger.idNumber || passenger.passport_number,
                         passengerType: passenger.type ? passenger.type.toUpperCase() : 'ADULT',
-                        type: passenger.type || 'adult'
+                        type: passenger.type || 'adult' // Keep original type for client-side logic
                     })) : [],
                     selectedServices: selectedServices,
-                    promoCode: promoCode || null
+                    promoCode: promoCode || null,
+                    userId: loggedInUser ? loggedInUser.user_id : null // Include user_id if logged in
                 };
-                
+
                 // Lưu lại vào sessionStorage
                 sessionStorage.setItem('bookingData', JSON.stringify(bookingData));
                 console.log("Đã tạo và lưu bookingData", bookingData);
             } else {
                 console.error("Thiếu thông tin cần thiết để tạo bookingData");
+                // Redirect back to customer info page if essential data is missing
+                alert("Thiếu thông tin đặt vé. Vui lòng quay lại bước trước.");
+                window.location.href = 'customer-info.html';
+                return; // Stop execution
             }
         } catch (error) {
             console.error("Lỗi khi tạo bookingData:", error);
+            alert("Đã xảy ra lỗi khi chuẩn bị thông tin thanh toán. Vui lòng thử lại.");
+            // Optionally redirect or show a specific error page
+            return; // Stop execution
         }
+    } else {
+         // If bookingData already exists, parse it and add userId if logged in
+         const existingBookingData = JSON.parse(sessionStorage.getItem('bookingData'));
+         if (loggedInUser && !existingBookingData.userId) {
+             existingBookingData.userId = loggedInUser.user_id;
+             // Update customerInfo in bookingData with logged-in user details if it was previously guest info
+             // This prevents using potentially incomplete guest info if user logs in on payment page
+             if (!existingBookingData.customerInfo || !existingBookingData.customerInfo.userId) { // Check if customerInfo is not already linked to a user
+                  existingBookingData.customerInfo = {
+                     fullName: loggedInUser.fullname,
+                     email: loggedInUser.email,
+                     phone: loggedInUser.phone,
+                     seatClass: existingBookingData.customerInfo?.seatClass || 'ECONOMY' // Keep existing seat class
+                  };
+             }
+             sessionStorage.setItem('bookingData', JSON.stringify(existingBookingData));
+             console.log("Updated existing bookingData with logged-in user:", existingBookingData);
+         }
     }
-    
+
+
     // Setup event listeners for payment form
     setupBankTransferForm();
     setupMomoForm();
+    // Initial display of the default active form (MoMo in this case)
+    showPaymentForm(document.querySelector('.method-tab.active').getAttribute('data-method'));
 });
 
 // Setup Bank Transfer Form

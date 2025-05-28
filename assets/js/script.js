@@ -5,6 +5,9 @@ const API_BASE_URL = 'http://localhost:3000/api';
 const bookingInfoElement = document.getElementById('booking-info');
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Kiểm tra trạng thái đăng nhập và cập nhật UI
+    setupUserAuthentication();
+    
     // Get search form element
     const searchForm = document.getElementById('search-form');
     
@@ -706,9 +709,29 @@ function getPriceMultiplierForPassengerType(passengerType) {
 
 // Load customer info page
 function loadCustomerInfoPage() {
+    // Check if user is logged in
+    const sessionId = localStorage.getItem('sessionId') || sessionStorage.getItem('sessionId');
+    if (!sessionId) {
+        // User not logged in, redirect to login page
+        sessionStorage.setItem('redirectAfterLogin', window.location.href); // Store current URL for redirection after login
+        alert('Vui lòng đăng nhập để tiếp tục đặt vé.');
+        window.location.href = 'login.html';
+        return;
+    }
+
     // Get selected flight from sessionStorage
-    const selectedFlightData = JSON.parse(sessionStorage.getItem('selectedFlight'));
+    let selectedFlightData = JSON.parse(sessionStorage.getItem('selectedFlight'));
+    let pendingFlightSelection = JSON.parse(sessionStorage.getItem('pendingFlightSelection'));
+
+    if (!selectedFlightData && pendingFlightSelection) {
+        // If there's a pending flight selection (user was redirected from flight-list to login)
+        selectedFlightData = pendingFlightSelection;
+        sessionStorage.setItem('selectedFlight', JSON.stringify(selectedFlightData)); // Move to selectedFlight
+        sessionStorage.removeItem('pendingFlightSelection'); // Clear pending
+    }
+
     if (!selectedFlightData) {
+        console.error("Customer info: No selected flight data found. Redirecting to home.");
         window.location.href = '../../index.html'; // Corrected path
         return;
     }
@@ -3154,4 +3177,234 @@ function createLoadingOverlay() {
     overlay.appendChild(style);
     
     return overlay;
+}
+
+// Xử lý đăng nhập và đăng xuất người dùng
+function setupUserAuthentication() {
+    // Kiểm tra xem người dùng đã đăng nhập chưa
+    const sessionId = localStorage.getItem('sessionId') || sessionStorage.getItem('sessionId');
+    const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+    
+    // Tìm icon user trong header
+    const userIcon = document.querySelector('a[title="Đăng nhập"] i.fas.fa-user');
+    if (!userIcon) return;
+    
+    const userLink = userIcon.parentElement;
+    
+    // Nếu đã đăng nhập
+    if (sessionId && userData) {
+        try {
+            const user = JSON.parse(userData);
+            
+            // Thay đổi title của link
+            userLink.setAttribute('title', user.fullname || 'Tài khoản');
+            
+            // Tạo dropdown menu
+            createUserDropdown(userLink, user);
+            
+            // Thay đổi href để không chuyển hướng khi click
+            userLink.setAttribute('href', 'javascript:void(0)');
+            
+            // Thêm class để nhận biết đã đăng nhập
+            userLink.classList.add('logged-in');
+        } catch (error) {
+            console.error('Error parsing user data:', error);
+        }
+    } else {
+        // Nếu chưa đăng nhập, đảm bảo link dẫn đến trang đăng nhập
+        userLink.setAttribute('href', 'assets/pages/login.html');
+        if (window.location.pathname.includes('assets/pages/')) {
+            userLink.setAttribute('href', 'login.html');
+        }
+    }
+}
+
+// Tạo dropdown menu cho người dùng đã đăng nhập
+function createUserDropdown(userLink, userData) {
+    // Xóa dropdown cũ nếu có
+    const existingDropdown = document.getElementById('user-dropdown');
+    if (existingDropdown) {
+        existingDropdown.remove();
+    }
+    
+    // Tạo dropdown mới
+    const dropdown = document.createElement('div');
+    dropdown.id = 'user-dropdown';
+    dropdown.className = 'user-dropdown';
+    dropdown.style.display = 'none';
+    
+    // Tạo nội dung dropdown
+    dropdown.innerHTML = `
+        <div class="dropdown-header">
+            <span class="user-name">${userData.fullname}</span>
+            <span class="user-email">${userData.email}</span>
+        </div>
+        <ul class="dropdown-menu">
+            <li><a href="${window.location.pathname.includes('assets/pages/') ? 'profile.html' : 'assets/pages/profile.html'}"><i class="fas fa-user-circle"></i> Thông tin tài khoản</a></li>
+            <li><a href="${window.location.pathname.includes('assets/pages/') ? 'my-bookings.html' : 'assets/pages/my-bookings.html'}"><i class="fas fa-ticket-alt"></i> Đặt chỗ của tôi</a></li>
+            <li><a href="#" id="logout-button"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+        </ul>
+    `;
+    
+    // Thêm dropdown vào DOM
+    document.body.appendChild(dropdown);
+    
+    // Xử lý hiển thị/ẩn dropdown khi click vào icon user
+    userLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const isVisible = dropdown.style.display === 'block';
+        
+        // Ẩn tất cả các dropdown khác
+        document.querySelectorAll('.user-dropdown').forEach(el => {
+            el.style.display = 'none';
+        });
+        
+        // Hiển thị hoặc ẩn dropdown hiện tại
+        dropdown.style.display = isVisible ? 'none' : 'block';
+        
+        // Định vị dropdown dưới icon user
+        const rect = userLink.getBoundingClientRect();
+        dropdown.style.position = 'absolute';
+        dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+        dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+    });
+    
+    // Ẩn dropdown khi click ra ngoài
+    document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target) && e.target !== userLink && !userLink.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+    
+    // Xử lý đăng xuất
+    const logoutButton = document.getElementById('logout-button');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            logout();
+        });
+    }
+    
+    // Thêm style cho dropdown
+    addDropdownStyles();
+}
+
+// Thêm CSS cho dropdown
+function addDropdownStyles() {
+    // Kiểm tra nếu đã thêm style rồi thì không thêm nữa
+    if (document.getElementById('user-dropdown-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'user-dropdown-styles';
+    style.textContent = `
+        .user-dropdown {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            min-width: 220px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+        
+        .dropdown-header {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background-color: #f8f9fa;
+        }
+        
+        .user-name {
+            display: block;
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .user-email {
+            display: block;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .dropdown-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .dropdown-menu li {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .dropdown-menu li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        
+        .dropdown-menu li a:hover {
+            background-color: #f5f5f5;
+            color: #0d6efd;
+        }
+        
+        .dropdown-menu li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        #logout-button {
+            color: #dc3545;
+        }
+        
+        #logout-button:hover {
+            background-color: #ffebee;
+        }
+    `;
+    
+    document.head.appendChild(style);
+}
+
+// Xử lý đăng xuất
+function logout() {
+    // Lấy sessionId từ localStorage hoặc sessionStorage
+    const sessionId = localStorage.getItem('sessionId') || sessionStorage.getItem('sessionId');
+    
+    if (sessionId) {
+        // Gọi API đăng xuất
+        fetch(`${API_BASE_URL}/users/logout`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ sessionId })
+        })
+        .catch(error => {
+            console.error('Error during logout:', error);
+        })
+        .finally(() => {
+            // Xóa dữ liệu đăng nhập khỏi localStorage và sessionStorage
+            localStorage.removeItem('sessionId');
+            localStorage.removeItem('user');
+            localStorage.removeItem('expireTime');
+            
+            sessionStorage.removeItem('sessionId');
+            sessionStorage.removeItem('user');
+            sessionStorage.removeItem('expireTime');
+            
+            // Chuyển hướng về trang chủ
+            const isInSubfolder = window.location.pathname.includes('/assets/pages/');
+            window.location.href = isInSubfolder ? '../../index.html' : 'index.html';
+        });
+    } else {
+        // Nếu không có sessionId, chỉ cần chuyển hướng về trang chủ
+        const isInSubfolder = window.location.pathname.includes('/assets/pages/');
+        window.location.href = isInSubfolder ? '../../index.html' : 'index.html';
+    }
 }

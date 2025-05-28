@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/profile.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="container">
+                <a href="../../index.html" class="navbar-brand">Flight Booking</a>
+                <ul class="navbar-nav">
+                    <li><a href="../../index.html">Trang chủ</a></li>
+                    <li><a href="flight-list.html">Chuyến bay</a></li>
+                    <li><a href="khuyen-mai.html">Khuyến mãi</a></li>
+                    <li><a href="ho-tro.html">Hỗ trợ</a></li>
+                    <li><a href="lien-he.html">Liên hệ</a></li>
+                    <li><a href="login.html">Đăng nhập</a></li>
+                    <li><a href="register.html">Đăng ký</a></li>
+                    <li><a href="profile.html">Profile</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container profile-container">
+        <h1>Thông tin cá nhân</h1>
+        <div id="profile-info" class="profile-card">
+            <p><strong>Họ và tên:</strong> <span id="fullname"></span></p>
+            <p><strong>Email:</strong> <span id="email"></span></p>
+            <p><strong>Số điện thoại:</strong> <span id="phone"></span></p>
+            <p><strong>Ngày tạo tài khoản:</strong> <span id="created-at"></span></p>
+            <p><strong>Lần đăng nhập cuối:</strong> <span id="last-login"></span></p>
+            <button id="logout-button" class="btn btn-danger">Đăng xuất</button>
+        </div>
+        <div id="profile-error" class="alert alert-danger" style="display: none;"></div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Flight Booking. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/profile.js"></script>
+</body>
+</html>

@@ -3,6 +3,9 @@ const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
 const { open } = require('sqlite');
 const path = require('path');
+const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,7 +13,6 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
 // Database setup
 let db;
@@ -45,9 +47,34 @@ async function setupDatabase() {
             available_classes TEXT NOT NULL
         );
 
+        -- Bảng USERS để lưu thông tin người dùng
+        CREATE TABLE IF NOT EXISTS users (
+            user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fullname TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            phone TEXT,
+            password TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_login DATETIME,
+            status TEXT DEFAULT 'active' CHECK(status IN ('active', 'inactive', 'blocked'))
+        );
+
+        -- Bảng USER_SESSIONS để lưu phiên đăng nhập
+        CREATE TABLE IF NOT EXISTS user_sessions (
+            session_id TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            login_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+            expire_time DATETIME NOT NULL,
+            ip_address TEXT,
+            user_agent TEXT,
+            is_active BOOLEAN DEFAULT 1,
+            FOREIGN KEY (user_id) REFERENCES users(user_id)
+        );
+
         -- Bảng BOOKINGS with round-trip support
         CREATE TABLE IF NOT EXISTS bookings (
             booking_id TEXT PRIMARY KEY,
+            user_id INTEGER,                        -- Foreign key to users table (can be NULL for guest bookings)
             departure_flight_id INTEGER NOT NULL,
             return_flight_id INTEGER,               -- Null for one-way trips
             contact_name TEXT NOT NULL,
@@ -60,6 +87,7 @@ async function setupDatabase() {
             promo_code TEXT,                        -- Mã khuyến mãi nếu có
             passengers_info TEXT,                   -- Additional passenger information
             is_round_trip BOOLEAN DEFAULT 0,        -- Flag to indicate if this is a round-trip booking
+            FOREIGN KEY (user_id) REFERENCES users(user_id),
             FOREIGN KEY (departure_flight_id) REFERENCES flights(flight_id),
             FOREIGN KEY (return_flight_id) REFERENCES flights(flight_id)
         );
@@ -120,6 +148,125 @@ async function setupDatabase() {
 }
 
 // API endpoints
+// Test endpoint to verify API is working
+app.get('/api/test', (req, res) => {
+    console.log('Test endpoint called');
+    res.json({ status: 'API is working', timestamp: new Date().toISOString() });
+});
+
+// New endpoint with a different path to avoid conflicts
+app.get('/api/user/bookings', async (req, res) => {
+    console.log('GET /api/user/bookings endpoint called');
+    try {
+        const sessionId = req.headers.authorization;
+        console.log('Session ID:', sessionId);
+        
+        if (!sessionId) {
+            console.log('No session ID provided');
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        // Check if session exists and is valid
+        const session = await db.get(
+            'SELECT * FROM user_sessions WHERE session_id = ? AND is_active = 1 AND expire_time > CURRENT_TIMESTAMP',
+            [sessionId]
+        );
+        console.log('Session found:', session ? 'Yes' : 'No');
+        
+        if (!session) {
+            console.log('Invalid or expired session');
+            return res.status(401).json({ error: 'Invalid or expired session' });
+        }
+        
+        console.log('User ID from session:', session.user_id);
+        
+        // Get user's bookings
+        const bookings = await db.all('SELECT * FROM bookings WHERE user_id = ? ORDER BY booking_time DESC', [session.user_id]);
+        console.log(`Found ${bookings.length} bookings for user`);
+        
+        // Format bookings data for the client
+        const formattedBookings = [];
+        
+        for (const booking of bookings) {
+            console.log(`Processing booking ID: ${booking.booking_id}`);
+            try {
+                // Get departure flight
+                const departureFlight = await db.get('SELECT * FROM flights WHERE flight_id = ?', [booking.departure_flight_id]);
+                
+                // Get return flight if this is a round trip
+                let returnFlight = null;
+                if (booking.is_round_trip === 1 && booking.return_flight_id) {
+                    returnFlight = await db.get('SELECT * FROM flights WHERE flight_id = ?', [booking.return_flight_id]);
+                }
+                
+                // Get passengers
+                const passengers = await db.all('SELECT * FROM booking_details WHERE booking_id = ?', [booking.booking_id]);
+                console.log(`Found ${passengers.length} passengers for booking ${booking.booking_id}`);
+                
+                // Format the booking data
+                const formattedBooking = {
+                    id: booking.booking_id,
+                    bookingNumber: booking.booking_id,
+                    status: booking.payment_status,
+                    bookingDate: booking.booking_time,
+                    totalPrice: booking.total_amount,
+                    flights: [
+                        {
+                            type: 'outbound',
+                            flightNumber: departureFlight ? `${departureFlight.airline_code}${departureFlight.flight_number}` : 'N/A',
+                            airline: departureFlight ? departureFlight.airline : 'N/A',
+                            departureCode: departureFlight ? departureFlight.departure_airport : 'N/A',
+                            arrivalCode: departureFlight ? departureFlight.arrival_airport : 'N/A',
+                            departureTime: departureFlight ? departureFlight.departure_time : null,
+                            arrivalTime: departureFlight ? departureFlight.arrival_time : null,
+                            seatClass: booking.travel_class
+                        }
+                    ],
+                    passengers: passengers.map(p => ({
+                        name: p.full_name,
+                        type: p.passenger_type.toLowerCase(),
+                        passportNumber: p.passport_number
+                    })),
+                    contactInfo: {
+                        name: booking.contact_name,
+                        email: booking.email,
+                        phone: booking.phone
+                    },
+                    payment: {
+                        method: booking.payment_method || 'N/A',
+                        status: booking.payment_status
+                    }
+                };
+                
+                // Add return flight if exists
+                if (returnFlight) {
+                    formattedBooking.flights.push({
+                        type: 'return',
+                        flightNumber: `${returnFlight.airline_code}${returnFlight.flight_number}`,
+                        airline: returnFlight.airline,
+                        departureCode: returnFlight.departure_airport,
+                        arrivalCode: returnFlight.arrival_airport,
+                        departureTime: returnFlight.departure_time,
+                        arrivalTime: returnFlight.arrival_time,
+                        seatClass: booking.travel_class
+                    });
+                }
+                
+                formattedBookings.push(formattedBooking);
+            } catch (bookingError) {
+                console.error(`Error processing booking ${booking.booking_id}:`, bookingError);
+                // Continue with the next booking
+            }
+        }
+        
+        console.log(`Returning ${formattedBookings.length} formatted bookings`);
+        res.json({ bookings: formattedBookings });
+    } catch (error) {
+        console.error('Error fetching user bookings:', error);
+        res.status(500).json({ error: 'Failed to fetch bookings', details: error.message });
+    }
+});
+
 app.get('/api/flights', async (req, res) => {
     try {
         const { departure, destination, departDate, seatClass, status } = req.query;
@@ -208,12 +355,6 @@ app.post('/api/flights', async (req, res) => {
         const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
         const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
         const duration = `${durationHours}h ${durationMinutes}m`;
-
-        // Calculate total available seats
-        const total_seats = (seats_economy || 0) + 
-                           (seats_premium_economy || 0) + 
-                           (seats_business || 0) + 
-                           (seats_first || 0);
 
         // available_classes có thể là mảng hoặc chuỗi, đảm bảo lưu là chuỗi
         const availableClassesString = Array.isArray(available_classes) 
@@ -544,7 +685,8 @@ app.post('/api/bookings', async (req, res) => {
             totalAmount, 
             passengerCounts, 
             paymentMethod, 
-            transactionInfo 
+            transactionInfo,
+            userId // Extract userId from the request body
         } = req.body;
 
         // Use the data regardless of which field name was used
@@ -558,7 +700,8 @@ app.post('/api/bookings', async (req, res) => {
             returnFlightId: finalReturnFlightId, 
             isRoundTrip: finalIsRoundTrip,
             customerInfo, 
-            passengersCount: passengers?.length 
+            passengersCount: passengers?.length,
+            userId // Log userId
         });
         
         // Validate required fields with better error messages
@@ -860,7 +1003,7 @@ app.post('/api/bookings', async (req, res) => {
             console.log(`Updating seats for return flight ${returnFlight.flight_id}, reducing ${returnSeatField} by ${totalPassengers}`);
             await db.run(`UPDATE flights SET 
                 ${returnSeatField} = ${returnSeatField} - ?, 
-                available_seats = available_seats - ? 
+                available_seats = available_seats + ? 
                 WHERE flight_id = ?`, 
                 [totalPassengers, totalPassengers, returnFlight.flight_id]
             );
@@ -877,11 +1020,12 @@ app.post('/api/bookings', async (req, res) => {
         // Insert booking record with passenger counts
         await db.run(`
             INSERT INTO bookings (
-                booking_id, departure_flight_id, return_flight_id, contact_name, email, phone, travel_class, 
+                booking_id, user_id, departure_flight_id, return_flight_id, contact_name, email, phone, travel_class, 
                 total_amount, booking_time, payment_status, promo_code, passengers_info, is_round_trip
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
             bookingId,
+            userId, // Include userId here
             departureFlight.flight_id,
             finalIsRoundTrip ? returnFlight.flight_id : null,
             customerInfo.fullName,
@@ -1118,6 +1262,7 @@ app.patch('/api/bookings/:id/payment', async (req, res) => {
             }
         }
         
+        // Update booking payment status
         const result = await db.run(
             'UPDATE bookings SET payment_status = ? WHERE booking_id = ?',
             [paymentStatus, bookingId]
@@ -1597,14 +1742,8 @@ app.patch('/api/admin/bookings/:id/payment', async (req, res) => {
         if (result.changes === 0) {
             return res.status(404).json({ error: 'Booking not found' });
         }
-
-                // Removed automatic seat assignment logic
         
-        res.json({ 
-            success: true, 
-            message: 'Payment status updated successfully',
-            paymentStatus 
-        });
+        res.json({ success: true, message: 'Payment status updated successfully', paymentStatus });
     } catch (error) {
         console.error('Error updating payment status:', error);
         res.status(500).json({ error: 'Failed to update payment status' });
@@ -2564,3 +2703,661 @@ function calculatePercentageChange(current, previous) {
     }
     return ((current - previous) / previous) * 100;
 }
+
+// API endpoints for user registration and authentication
+app.post('/api/users/register', async (req, res) => {
+    try {
+        const { fullname, email, phone, password } = req.body;
+        
+        // Validate required fields
+        if (!fullname || !email || !password) {
+            return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin bắt buộc' });
+        }
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: 'Email không hợp lệ' });
+        }
+        
+        // Check if email already exists
+        const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+        if (existingUser) {
+            return res.status(409).json({ error: 'Email đã được sử dụng' });
+        }
+        
+        // Hash password
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        
+        // Insert new user
+        const result = await db.run(
+            'INSERT INTO users (fullname, email, phone, password) VALUES (?, ?, ?, ?)',
+            [fullname, email, phone || null, hashedPassword]
+        );
+        
+        // Create session for the new user
+        const userId = result.lastID;
+        const sessionId = uuidv4();
+        const expireTime = new Date();
+        expireTime.setDate(expireTime.getDate() + 30); // Session expires in 30 days
+        
+        await db.run(
+            'INSERT INTO user_sessions (session_id, user_id, expire_time, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)',
+            [sessionId, userId, expireTime.toISOString(), req.ip, req.headers['user-agent']]
+        );
+        
+        // Update last login time
+        await db.run(
+            'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = ?',
+            [userId]
+        );
+        
+        // Get user data (without password)
+        const user = await db.get('SELECT user_id, fullname, email, phone, created_at, last_login FROM users WHERE user_id = ?', [userId]);
+        
+        const userData = {
+            user_id: user.user_id,
+            fullname: user.fullname,
+            email: user.email,
+            phone: user.phone,
+            created_at: user.created_at,
+            last_login: user.last_login
+        };
+        
+        res.json({
+            success: true,
+            message: 'Đăng ký thành công',
+            user: userData,
+            session: {
+                sessionId,
+                expireTime
+            }
+        });
+    } catch (error) {
+        console.error('Error registering user:', error);
+        console.error('Error stack:', error.stack); // Add stack trace logging
+        // Check for specific database errors if needed, but generic 500 with details is often sufficient
+        res.status(500).json({ error: 'Đã xảy ra lỗi khi đăng ký', details: error.message }); // Include error message in response
+    }
+});
+
+app.post('/api/users/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        // Validate required fields
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Vui lòng nhập email và mật khẩu' });
+        }
+        
+        // Get user by email
+        const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+        
+        if (!user) {
+            return res.status(401).json({ error: 'Email hoặc mật khẩu không chính xác' });
+        }
+        
+        // Check if user is blocked
+        if (user.status === 'blocked') {
+            return res.status(403).json({ error: 'Tài khoản của bạn đã bị khóa' });
+        }
+        
+        // Verify password
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        
+        if (!passwordMatch) {
+            return res.status(401).json({ error: 'Email hoặc mật khẩu không chính xác' });
+        }
+        
+        // Create new session
+        const sessionId = uuidv4();
+        const expireTime = new Date();
+        expireTime.setDate(expireTime.getDate() + 30); // Session expires in 30 days
+        
+        await db.run(
+            'INSERT INTO user_sessions (session_id, user_id, expire_time, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)',
+            [sessionId, user.user_id, expireTime.toISOString(), req.ip, req.headers['user-agent']]
+        );
+        
+        // Update last login time
+        await db.run(
+            'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = ?',
+            [user.user_id]
+        );
+        
+        // Get user data (without password)
+        const userData = {
+            user_id: user.user_id,
+            fullname: user.fullname,
+            email: user.email,
+            phone: user.phone,
+            created_at: user.created_at,
+            last_login: user.last_login
+        };
+        
+        res.json({
+            success: true,
+            message: 'Đăng nhập thành công',
+            user: userData,
+            session: {
+                sessionId,
+                expireTime
+            }
+        });
+    } catch (error) {
+        console.error('Error logging in:', error);
+        res.status(500).json({ error: 'Đã xảy ra lỗi khi đăng nhập' });
+    }
+});
+
+app.post('/api/users/logout', async (req, res) => {
+    try {
+        const { sessionId } = req.body;
+        
+        if (!sessionId) {
+            return res.status(400).json({ error: 'Session ID is required' });
+        }
+        
+        // Invalidate the session
+        await db.run(
+            'UPDATE user_sessions SET is_active = 0 WHERE session_id = ?',
+            [sessionId]
+        );
+        
+        res.json({
+            success: true,
+            message: 'Đăng xuất thành công'
+        });
+    } catch (error) {
+        console.error('Error logging out:', error);
+        res.status(500).json({ error: 'Đã xảy ra lỗi khi đăng xuất' });
+    }
+});
+
+app.get('/api/users/profile', async (req, res) => {
+    try {
+        const sessionId = req.headers.authorization;
+        
+        if (!sessionId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        // Check if session exists and is valid
+        const session = await db.get(
+            'SELECT * FROM user_sessions WHERE session_id = ? AND is_active = 1 AND expire_time > CURRENT_TIMESTAMP',
+            [sessionId]
+        );
+        
+        if (!session) {
+            return res.status(401).json({ error: 'Invalid or expired session' });
+        }
+        
+        // Get user data
+        const user = await db.get(
+            'SELECT user_id, fullname, email, phone, created_at, last_login FROM users WHERE user_id = ?',
+            [session.user_id]
+        );
+        
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        res.json({
+            success: true,
+            user
+        });
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        res.status(500).json({ error: 'Failed to fetch user profile' });
+    }
+});
+
+// Get bookings for the current user - MUST come before the :id route
+app.get('/api/bookings/user', async (req, res) => {
+    console.log('GET /api/bookings/user endpoint called');
+    try {
+        const sessionId = req.headers.authorization;
+        console.log('Session ID:', sessionId);
+        
+        if (!sessionId) {
+            console.log('No session ID provided');
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        // Check if session exists and is valid
+        const session = await db.get(
+            'SELECT * FROM user_sessions WHERE session_id = ? AND is_active = 1 AND expire_time > CURRENT_TIMESTAMP',
+            [sessionId]
+        );
+        console.log('Session found:', session ? 'Yes' : 'No');
+        
+        if (!session) {
+            console.log('Invalid or expired session');
+            return res.status(401).json({ error: 'Invalid or expired session' });
+        }
+        
+        console.log('User ID from session:', session.user_id);
+        
+        // Get user's bookings
+        const bookings = await db.all('SELECT * FROM bookings WHERE user_id = ? ORDER BY booking_time DESC', [session.user_id]);
+        console.log(`Found ${bookings.length} bookings for user`);
+        
+        // Format bookings data for the client
+        const formattedBookings = [];
+        
+        for (const booking of bookings) {
+            console.log(`Processing booking ID: ${booking.booking_id}`);
+            try {
+                // Get departure flight
+                const departureFlight = await db.get('SELECT * FROM flights WHERE flight_id = ?', [booking.departure_flight_id]);
+                
+                // Get return flight if this is a round trip
+                let returnFlight = null;
+                if (booking.is_round_trip === 1 && booking.return_flight_id) {
+                    returnFlight = await db.get('SELECT * FROM flights WHERE flight_id = ?', [booking.return_flight_id]);
+                }
+                
+                // Get passengers
+                const passengers = await db.all('SELECT * FROM booking_details WHERE booking_id = ?', [booking.booking_id]);
+                console.log(`Found ${passengers.length} passengers for booking ${booking.booking_id}`);
+                
+                // Format the booking data
+                const formattedBooking = {
+                    id: booking.booking_id,
+                    bookingNumber: booking.booking_id,
+                    status: booking.payment_status,
+                    bookingDate: booking.booking_time,
+                    totalPrice: booking.total_amount,
+                    flights: [
+                        {
+                            type: 'outbound',
+                            flightNumber: departureFlight ? `${departureFlight.airline_code}${departureFlight.flight_number}` : 'N/A',
+                            airline: departureFlight ? departureFlight.airline : 'N/A',
+                            departureCode: departureFlight ? departureFlight.departure_airport : 'N/A',
+                            arrivalCode: departureFlight ? departureFlight.arrival_airport : 'N/A',
+                            departureTime: departureFlight ? departureFlight.departure_time : null,
+                            arrivalTime: departureFlight ? departureFlight.arrival_time : null,
+                            seatClass: booking.travel_class
+                        }
+                    ],
+                    passengers: passengers.map(p => ({
+                        name: p.full_name,
+                        type: p.passenger_type.toLowerCase(),
+                        passportNumber: p.passport_number
+                    })),
+                    contactInfo: {
+                        name: booking.contact_name,
+                        email: booking.email,
+                        phone: booking.phone
+                    },
+                    payment: {
+                        method: booking.payment_method || 'N/A',
+                        status: booking.payment_status
+                    }
+                };
+                
+                // Add return flight if exists
+                if (returnFlight) {
+                    formattedBooking.flights.push({
+                        type: 'return',
+                        flightNumber: `${returnFlight.airline_code}${returnFlight.flight_number}`,
+                        airline: returnFlight.airline,
+                        departureCode: returnFlight.departure_airport,
+                        arrivalCode: returnFlight.arrival_airport,
+                        departureTime: returnFlight.departure_time,
+                        arrivalTime: returnFlight.arrival_time,
+                        seatClass: booking.travel_class
+                    });
+                }
+                
+                formattedBookings.push(formattedBooking);
+            } catch (bookingError) {
+                console.error(`Error processing booking ${booking.booking_id}:`, bookingError);
+                // Continue with the next booking
+            }
+        }
+        
+        console.log(`Returning ${formattedBookings.length} formatted bookings`);
+        res.json({ bookings: formattedBookings });
+    } catch (error) {
+        console.error('Error fetching user bookings:', error);
+        res.status(500).json({ error: 'Failed to fetch bookings', details: error.message });
+    }
+});
+
+// Cancel a booking
+app.post('/api/bookings/:id/cancel', async (req, res) => {
+    try {
+        const bookingId = req.params.id;
+        const sessionId = req.headers.authorization;
+        
+        if (!sessionId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        // Check if session exists and is valid
+        const session = await db.get(
+            'SELECT * FROM user_sessions WHERE session_id = ? AND is_active = 1 AND expire_time > CURRENT_TIMESTAMP',
+            [sessionId]
+        );
+        
+        if (!session) {
+            return res.status(401).json({ error: 'Invalid or expired session' });
+        }
+        
+        // Get the booking
+        const booking = await db.get('SELECT * FROM bookings WHERE booking_id = ?', [bookingId]);
+        
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+        
+        // Check if the booking belongs to the user
+        if (booking.user_id !== session.user_id) {
+            return res.status(403).json({ error: 'You are not authorized to cancel this booking' });
+        }
+        
+        // Check if the booking is already cancelled
+        if (booking.payment_status === 'cancelled') {
+            return res.status(400).json({ error: 'This booking is already cancelled' });
+        }
+        
+        // Get the number of passengers in this booking
+        const passengerCount = await db.get('SELECT COUNT(*) as count FROM booking_details WHERE booking_id = ?', [bookingId]);
+        
+        // Get the seat class used in the booking
+        const seatClass = booking.travel_class || 'ECONOMY';
+        
+        // Determine which seat field to update based on the seat class
+        let seatField;
+        switch(seatClass) {
+            case 'PREMIUM_ECONOMY':
+                seatField = 'seats_premium_economy';
+                break;
+            case 'BUSINESS':
+                seatField = 'seats_business';
+                break;
+            case 'FIRST':
+                seatField = 'seats_first';
+                break;
+            case 'ECONOMY':
+            default:
+                seatField = 'seats_economy';
+                break;
+        }
+        
+        // Restore the seats to the flights - both class-specific and total
+        await db.run(`
+            UPDATE flights SET 
+            ${seatField} = ${seatField} + ?,
+            available_seats = available_seats + ? 
+            WHERE flight_id = ?
+        `, [passengerCount.count, passengerCount.count, booking.departure_flight_id]);
+        
+        // If this was a round trip, restore seats for the return flight too
+        if (booking.is_round_trip === 1 && booking.return_flight_id) {
+            await db.run(`
+                UPDATE flights SET 
+                ${seatField} = ${seatField} + ?,
+                available_seats = available_seats + ? 
+                WHERE flight_id = ?
+            `, [passengerCount.count, passengerCount.count, booking.return_flight_id]);
+        }
+        
+        // Update booking status to cancelled
+        await db.run('UPDATE bookings SET payment_status = ? WHERE booking_id = ?', ['cancelled', bookingId]);
+        
+        res.json({ 
+            success: true, 
+            message: 'Booking cancelled successfully',
+            bookingId: bookingId 
+        });
+    } catch (error) {
+        console.error('Error cancelling booking:', error);
+        res.status(500).json({ error: 'Failed to cancel booking', details: error.message });
+    }
+});
+
+// Get details of a specific booking - MUST come after the /user route
+app.get('/api/bookings/:id', async (req, res) => {
+    try {
+        const bookingId = req.params.id;
+        const sessionId = req.headers.authorization;
+        
+        if (!sessionId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        // Check if session exists and is valid
+        const session = await db.get(
+            'SELECT * FROM user_sessions WHERE session_id = ? AND is_active = 1 AND expire_time > CURRENT_TIMESTAMP',
+            [sessionId]
+        );
+        
+        if (!session) {
+            return res.status(401).json({ error: 'Invalid or expired session' });
+        }
+        
+        // Get the booking
+        const booking = await db.get('SELECT * FROM bookings WHERE booking_id = ?', [bookingId]);
+        
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+        
+        // Check if the booking belongs to the user
+        if (booking.user_id !== session.user_id) {
+            return res.status(403).json({ error: 'You are not authorized to view this booking' });
+        }
+        
+        // Get departure flight details
+        const departureFlight = await db.get('SELECT * FROM flights WHERE flight_id = ?', [booking.departure_flight_id]);
+        
+        // Get return flight details if it's a round trip
+        let returnFlight = null;
+        if (booking.is_round_trip === 1 && booking.return_flight_id) {
+            returnFlight = await db.get('SELECT * FROM flights WHERE flight_id = ?', [booking.return_flight_id]);
+        }
+        
+        // Get passenger details
+        const passengers = await db.all('SELECT * FROM booking_details WHERE booking_id = ?', [bookingId]);
+        
+        // Get contact details
+        const contactDetails = await db.get('SELECT * FROM booking_contacts WHERE booking_id = ?', [bookingId]);
+        
+        // Format the booking details
+        const formattedBooking = {
+            bookingId: booking.booking_id,
+            bookingNumber: booking.booking_number,
+            bookingDate: booking.booking_date,
+            userId: booking.user_id,
+            paymentStatus: booking.payment_status,
+            paymentMethod: booking.payment_method,
+            totalPrice: booking.total_price,
+            travelClass: booking.travel_class,
+            isRoundTrip: booking.is_round_trip === 1,
+            
+            departureFlight: {
+                flightId: departureFlight.flight_id,
+                flightNumber: departureFlight.flight_number,
+                departureAirport: departureFlight.departure_airport,
+                arrivalAirport: departureFlight.arrival_airport,
+                departureTime: departureFlight.departure_time,
+                arrivalTime: departureFlight.arrival_time,
+                airline: departureFlight.airline,
+                aircraft: departureFlight.aircraft
+            },
+            
+            returnFlight: returnFlight ? {
+                flightId: returnFlight.flight_id,
+                flightNumber: returnFlight.flight_number,
+                departureAirport: returnFlight.departure_airport,
+                arrivalAirport: returnFlight.arrival_airport,
+                departureTime: returnFlight.departure_time,
+                arrivalTime: returnFlight.arrival_time,
+                airline: returnFlight.airline,
+                aircraft: returnFlight.aircraft
+            } : null,
+            
+            passengers: passengers.map(passenger => ({
+                passengerId: passenger.passenger_id,
+                firstName: passenger.first_name,
+                lastName: passenger.last_name,
+                dateOfBirth: passenger.date_of_birth,
+                nationality: passenger.nationality,
+                passportNumber: passenger.passport_number,
+                passengerType: passenger.passenger_type
+            })),
+            
+            contactDetails: contactDetails ? {
+                contactId: contactDetails.contact_id,
+                firstName: contactDetails.first_name,
+                lastName: contactDetails.last_name,
+                email: contactDetails.email,
+                phone: contactDetails.phone
+            } : null
+        };
+        
+        res.json(formattedBooking);
+    } catch (error) {
+        console.error('Error fetching booking details:', error);
+        res.status(500).json({ error: 'Failed to fetch booking details', details: error.message });
+    }
+});
+
+// Add a catch-all route for debugging
+app.use((req, res, next) => {
+    console.log(`Unhandled request: ${req.method} ${req.path}`);
+    res.status(404).json({ 
+        error: 'Route not found', 
+        method: req.method,
+        path: req.path,
+        availableRoutes: [
+            'GET /api/test',
+            'GET /api/bookings/user',
+            'GET /api/flights',
+            'GET /api/flights/:id',
+            'POST /api/bookings',
+            'GET /api/bookings/:id',
+            'PATCH /api/bookings/:id/payment',
+            'POST /api/bookings/:id/cancel'
+        ]
+    });
+});
+
+// Static file serving - moved to after API routes
+app.use(express.static(path.join(__dirname, 'public')));
+
+// New endpoint with a different path to avoid conflicts
+app.get('/api/user/bookings', async (req, res) => {
+    console.log('GET /api/user/bookings endpoint called');
+    try {
+        const sessionId = req.headers.authorization;
+        console.log('Session ID:', sessionId);
+        
+        if (!sessionId) {
+            console.log('No session ID provided');
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        // Check if session exists and is valid
+        const session = await db.get(
+            'SELECT * FROM user_sessions WHERE session_id = ? AND is_active = 1 AND expire_time > CURRENT_TIMESTAMP',
+            [sessionId]
+        );
+        console.log('Session found:', session ? 'Yes' : 'No');
+        
+        if (!session) {
+            console.log('Invalid or expired session');
+            return res.status(401).json({ error: 'Invalid or expired session' });
+        }
+        
+        console.log('User ID from session:', session.user_id);
+        
+        // Get user's bookings
+        const bookings = await db.all('SELECT * FROM bookings WHERE user_id = ? ORDER BY booking_time DESC', [session.user_id]);
+        console.log(`Found ${bookings.length} bookings for user`);
+        
+        // Format bookings data for the client
+        const formattedBookings = [];
+        
+        for (const booking of bookings) {
+            console.log(`Processing booking ID: ${booking.booking_id}`);
+            try {
+                // Get departure flight
+                const departureFlight = await db.get('SELECT * FROM flights WHERE flight_id = ?', [booking.departure_flight_id]);
+                
+                // Get return flight if this is a round trip
+                let returnFlight = null;
+                if (booking.is_round_trip === 1 && booking.return_flight_id) {
+                    returnFlight = await db.get('SELECT * FROM flights WHERE flight_id = ?', [booking.return_flight_id]);
+                }
+                
+                // Get passengers
+                const passengers = await db.all('SELECT * FROM booking_details WHERE booking_id = ?', [booking.booking_id]);
+                console.log(`Found ${passengers.length} passengers for booking ${booking.booking_id}`);
+                
+                // Format the booking data
+                const formattedBooking = {
+                    id: booking.booking_id,
+                    bookingNumber: booking.booking_id,
+                    status: booking.payment_status,
+                    bookingDate: booking.booking_time,
+                    totalPrice: booking.total_amount,
+                    flights: [
+                        {
+                            type: 'outbound',
+                            flightNumber: departureFlight ? `${departureFlight.airline_code}${departureFlight.flight_number}` : 'N/A',
+                            airline: departureFlight ? departureFlight.airline : 'N/A',
+                            departureCode: departureFlight ? departureFlight.departure_airport : 'N/A',
+                            arrivalCode: departureFlight ? departureFlight.arrival_airport : 'N/A',
+                            departureTime: departureFlight ? departureFlight.departure_time : null,
+                            arrivalTime: departureFlight ? departureFlight.arrival_time : null,
+                            seatClass: booking.travel_class
+                        }
+                    ],
+                    passengers: passengers.map(p => ({
+                        name: p.full_name,
+                        type: p.passenger_type.toLowerCase(),
+                        passportNumber: p.passport_number
+                    })),
+                    contactInfo: {
+                        name: booking.contact_name,
+                        email: booking.email,
+                        phone: booking.phone
+                    },
+                    payment: {
+                        method: booking.payment_method || 'N/A',
+                        status: booking.payment_status
+                    }
+                };
+                
+                // Add return flight if exists
+                if (returnFlight) {
+                    formattedBooking.flights.push({
+                        type: 'return',
+                        flightNumber: `${returnFlight.airline_code}${returnFlight.flight_number}`,
+                        airline: returnFlight.airline,
+                        departureCode: returnFlight.departure_airport,
+                        arrivalCode: returnFlight.arrival_airport,
+                        departureTime: returnFlight.departure_time,
+                        arrivalTime: returnFlight.arrival_time,
+                        seatClass: booking.travel_class
+                    });
+                }
+                
+                formattedBookings.push(formattedBooking);
+            } catch (bookingError) {
+                console.error(`Error processing booking ${booking.booking_id}:`, bookingError);
+                // Continue with the next booking
+            }
+        }
+        
+        console.log(`Returning ${formattedBookings.length} formatted bookings`);
+        res.json({ bookings: formattedBookings });
+    } catch (error) {
+        console.error('Error fetching user bookings:', error);
+        res.status(500).json({ error: 'Failed to fetch bookings', details: error.message });
+    }
+});
