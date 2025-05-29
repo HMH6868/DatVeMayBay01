@@ -3132,6 +3132,23 @@ app.post('/api/bookings/:id/cancel', async (req, res) => {
             return res.status(400).json({ error: 'This booking is already cancelled' });
         }
         
+        // Check if the flight is departing in less than 3 hours
+        const departureFlight = await db.get('SELECT * FROM flights WHERE flight_id = ?', [booking.departure_flight_id]);
+        if (departureFlight) {
+            const departureTime = new Date(departureFlight.departure_time);
+            const now = new Date();
+            const timeUntilDeparture = departureTime.getTime() - now.getTime();
+            const hoursUntilDeparture = timeUntilDeparture / (1000 * 60 * 60);
+            
+            if (hoursUntilDeparture < 3) {
+                return res.status(400).json({ 
+                    error: 'Cannot cancel booking. Flight departs in less than 3 hours.', 
+                    departureTime: departureTime,
+                    hoursRemaining: hoursUntilDeparture
+                });
+            }
+        }
+        
         // Determine if a refund should be processed based on the current payment status
         const shouldRefund = booking.payment_status === 'paid';
         

@@ -638,3 +638,46 @@ footer {
     border-radius: 8px;
     border: 1px dashed #ddd;
 }
+
+.status-badge.cancelled {
+    background-color: #ffd9d9;
+    color: #d9534f;
+}
+
+/* Time warning for bookings close to departure */
+.time-warning {
+    display: block;
+    color: #dc3545;
+    font-size: 0.85em;
+    font-weight: 500;
+    margin-top: 4px;
+}
+
+.btn-danger.disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.btn-danger.disabled:hover {
+    background-color: #6c757d;
+    transform: none;
+}
+
+/* Cancellation note styling */
+.cancellation-note {
+    background-color: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin: 15px 0;
+    border-left: 4px solid #6c757d;
+    font-size: 0.9em;
+}
+
+.cancellation-note.warning {
+    background-color: #fff3cd;
+    border-left: 4px solid #dc3545;
+    color: #856404;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
