@@ -1,50 +1,182 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile</title>
+    <title>Hồ sơ người dùng - FlyViet</title>
     <link rel="stylesheet" href="../css/styles.css">
-    <link rel="stylesheet" href="../css/profile.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .profile-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .profile-container h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #007bff;
+        }
+        
+        .profile-info {
+            margin-bottom: 30px;
+        }
+        
+        .profile-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .profile-table th, 
+        .profile-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .profile-table th {
+            background-color: #f8f9fa;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .profile-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar">
-            <div class="container">
-                <a href="../../index.html" class="navbar-brand">Flight Booking</a>
-                <ul class="navbar-nav">
+        <div class="container">
+            <div class="logo">
+                <h1>FlyViet</h1>
+            </div>
+            <nav>
+                <ul>
                     <li><a href="../../index.html">Trang chủ</a></li>
-                    <li><a href="flight-list.html">Chuyến bay</a></li>
                     <li><a href="khuyen-mai.html">Khuyến mãi</a></li>
+                    <li><a href="ticket-search.html">Tra cứu vé</a></li>
                     <li><a href="ho-tro.html">Hỗ trợ</a></li>
                     <li><a href="lien-he.html">Liên hệ</a></li>
-                    <li><a href="login.html">Đăng nhập</a></li>
-                    <li><a href="register.html">Đăng ký</a></li>
-                    <li><a href="profile.html">Profile</a></li>
+                    <li><a href="profile.html" class="active" title="Hồ sơ"><i class="fas fa-user"></i></a></li>
                 </ul>
-            </div>
-        </nav>
+            </nav>
+        </div>
     </header>
 
-    <main class="container profile-container">
-        <h1>Thông tin cá nhân</h1>
-        <div id="profile-info" class="profile-card">
-            <p><strong>Họ và tên:</strong> <span id="fullname"></span></p>
-            <p><strong>Email:</strong> <span id="email"></span></p>
-            <p><strong>Số điện thoại:</strong> <span id="phone"></span></p>
-            <p><strong>Ngày tạo tài khoản:</strong> <span id="created-at"></span></p>
-            <p><strong>Lần đăng nhập cuối:</strong> <span id="last-login"></span></p>
-            <button id="logout-button" class="btn btn-danger">Đăng xuất</button>
+    <main>
+        <div class="container">
+            <div class="profile-container">
+                <h2>Hồ sơ người dùng</h2>
+                <div class="profile-info">
+                    <table class="profile-table">
+                        <tbody id="profileTable">
+                            <!-- Thông tin người dùng sẽ được thêm vào đây bằng JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div id="profile-error" class="alert alert-danger" style="display: none;"></div>
     </main>
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 Flight Booking. All rights reserved.</p>
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>FlyViet</h3>
+                    <p>Đặt vé máy bay trực tuyến nhanh chóng, tiện lợi với giá tốt nhất.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h4>Thông tin</h4>
+                    <ul>
+                        <li><a href="#">Về chúng tôi</a></li>
+                        <li><a href="#">Điều khoản sử dụng</a></li>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                        <li><a href="#">Câu hỏi thường gặp</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Hỗ trợ</h4>
+                    <ul>
+                        <li><a href="#">Trung tâm trợ giúp</a></li>
+                        <li><a href="#">Hướng dẫn đặt vé</a></li>
+                        <li><a href="#">Chính sách hoàn hủy</a></li>
+                        <li><a href="#">Chính sách bảo hiểm</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Liên hệ</h4>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Đường ABC, Quận 1, TP.HCM</li>
+                        <li><i class="fas fa-phone"></i> 1900 1234</li>
+                        <li><i class="fas fa-envelope"></i> support@flyviet.vn</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 FlyViet. Tất cả các quyền được bảo lưu. ( Nhóm 12 )</p>
+            </div>
         </div>
     </footer>
 
-    <script src="../js/profile.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kiểm tra xem người dùng đã đăng nhập chưa
+            const user = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+            
+            if (!user) {
+                // Nếu không có thông tin người dùng, chuyển về trang đăng nhập
+                sessionStorage.setItem('redirectAfterLogin', window.location.href);
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Hiển thị thông tin người dùng
+            const profileTable = document.getElementById('profileTable');
+            
+            // Định nghĩa các trường thông tin cần hiển thị
+            const userFields = [
+                { label: 'Họ và tên', key: 'fullname' },
+                { label: 'Email', key: 'email' },
+                { label: 'Số điện thoại', key: 'phone' },
+                { label: 'Ngày tham gia', key: 'created_at' }
+            ];
+            
+            // Tạo các hàng cho bảng thông tin
+            userFields.forEach(field => {
+                let value = user[field.key] || 'Chưa cập nhật';
+                
+                // Định dạng lại một số trường dữ liệu
+                if (field.key === 'createdAt' && user[field.key]) {
+                    value = new Date(user[field.key]).toLocaleDateString('vi-VN');
+                }
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <th>${field.label}</th>
+                    <td>${value}</td>
+                `;
+                profileTable.appendChild(row);
+            });
+        });
+    </script>
 </body>
-</html>
+</html> 
