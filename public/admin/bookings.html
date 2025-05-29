@@ -87,6 +87,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="customers.html">
+                                <i class="fas fa-users me-2"></i>
+                                Quản lý Khách hàng
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="statistics.html">
                                 <i class="fas fa-chart-line me-2"></i>
                                 Thống kê & Báo cáo
@@ -129,8 +135,7 @@
                                     <option value="">Tất cả</option>
                                     <option value="unpaid">Chờ xác nhận</option>
                                     <option value="paid">Đã thanh toán</option>
-                                    <!-- <option value="refunded">Hoàn tiền</option>
-                                    <option value="cancelled">Đã hủy</option> -->
+                                    <option value="cancelled">Đã hủy</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -366,8 +371,7 @@
                             <select id="update-payment-status" class="form-select me-2" style="max-width: 200px;">
                                 <option value="unpaid">Chờ xác nhận</option>
                                 <option value="paid">Đã thanh toán</option>
-                                <!-- <option value="refunded">Hoàn tiền</option>
-                                <option value="cancelled">Đã hủy</option> -->
+                                <option value="cancelled">Đã hủy</option>
                             </select>
                             <button id="save-payment-status" class="btn btn-primary">Cập nhật</button>
                         </div>
@@ -385,4 +389,4 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="bookings.js"></script>
 </body>
-</html> 
+</html>

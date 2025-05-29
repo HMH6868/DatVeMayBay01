@@ -135,6 +135,10 @@
             border-top: 5px solid var(--warning-color);
         }
         
+        .result-container.danger {
+            border-top: 5px solid var(--danger-color);
+        }
+        
         .booking-reference {
             font-size: 18px;
             color: #666;
@@ -266,6 +270,11 @@
             color: var(--secondary-color);
         }
         
+        .status-badge.cancelled {
+            background-color: #ffeaed;
+            color: var(--danger-color);
+        }
+        
         .notification {
             padding: 15px;
             border-radius: 5px;
@@ -372,6 +381,7 @@
                     <li><a href="ticket-search.html" class="active">Tra cứu vé</a></li>
                     <li><a href="ho-tro.html">Hỗ trợ</a></li>
                     <li><a href="lien-he.html">Liên hệ</a></li>
+                    <li><a href="login.html" title="Đăng nhập"><i class="fas fa-user"></i></a></li>
                 </ul>
             </nav>
         </div>
@@ -524,6 +534,10 @@
                         statusClass = 'warning';
                         headerTitle = 'Đơn hàng chưa thanh toán';
                         break;
+                    case 'cancelled':
+                        statusClass = 'danger';
+                        headerTitle = 'Đơn hàng đã bị hủy';
+                        break;
                     default:
                         statusClass = '';
                         headerTitle = 'Thông tin đặt vé';
@@ -537,7 +551,7 @@
                     </div>
                 `;
                 
-                // Hiển thị thông báo nếu đơn hàng chưa thanh toán hoặc đang xử lý
+                // Hiển thị thông báo dựa trên trạng thái
                 if (data.booking.payment_status === 'unpaid' || data.booking.payment_status === 'pending') {
                     resultHTML += `
                         <div class="notification warning">
@@ -545,6 +559,50 @@
                             <p>Vui lòng hoàn tất thanh toán hoặc liên hệ với chúng tôi nếu cần hỗ trợ.</p>
                         </div>
                     `;
+                } else if (data.booking.payment_status === 'cancelled') {
+                    resultHTML += `
+                        <div class="notification error">
+                            <p><i class="fas fa-exclamation-circle"></i> Đơn hàng của bạn đã bị hủy: <span class="status-badge cancelled">${formatPaymentStatus(data.booking.payment_status)}</span></p>
+                            ${data.booking.cancellation_reason ? `<p>Lý do hủy: ${data.booking.cancellation_reason}</p>` : ''}
+                            <p>Vui lòng liên hệ với chúng tôi nếu cần hỗ trợ thêm.</p>
+                        </div>
+                    `;
+                    
+                    // Only display refund information if the booking was paid before cancellation
+                    const shouldRefund = data.shouldRefund === true || data.booking.should_refund === 1;
+                    
+                    if (shouldRefund) {
+                        // Calculate refund amounts based on who cancelled the booking
+                        const totalAmount = data.booking.total_amount || 0;
+                        let feeAmount = 0;
+                        let refundAmount = totalAmount;
+                        let refundMessage = "Tiền sẽ được hoàn về tài khoản của bạn sau 24 giờ.";
+                        
+                        // Check if booking was cancelled by admin (100% refund) or by user (80% refund)
+                        const cancelledByAdmin = data.booking.cancelled_by_admin === 1;
+                        
+                        if (!cancelledByAdmin) {
+                            // Standard 20% cancellation fee for user-initiated cancellations
+                            feeAmount = totalAmount * 0.2; // 20% fee
+                            refundAmount = totalAmount * 0.8; // 80% refund
+                            refundMessage = "Tiền sẽ được hoàn về tài khoản của bạn sau 24 giờ sau khi trừ phí hủy 20%.";
+                        } else {
+                            // No fee for admin-initiated cancellations
+                            refundMessage = "Tiền sẽ được hoàn lại 100% về tài khoản của bạn sau 24 giờ.";
+                        }
+                        
+                        resultHTML += `
+                            <div class="notification" style="background-color: #e8f4ff; border-left: 4px solid var(--primary-color); color: var(--primary-color);">
+                                <p><i class="fas fa-info-circle"></i> <strong>Thông tin hoàn tiền</strong></p>
+                                <p>${refundMessage}</p>
+                                <div style="margin-top: 10px;">
+                                    <p><strong>Số tiền đã thanh toán:</strong> ${formatCurrency(totalAmount)}</p>
+                                    <p><strong>Phí hủy:</strong> ${formatCurrency(feeAmount)}</p>
+                                    <p><strong>Số tiền hoàn lại:</strong> <span style="font-weight: bold; color: var(--primary-color);">${formatCurrency(refundAmount)}</span></p>
+                                </div>
+                            </div>
+                        `;
+                    }
                 }
                 
                 // Thông tin chuyến bay
@@ -799,5 +857,8 @@
             }
         });
     </script>
+    
+    <!-- Add script.js to maintain login state -->
+    <script src="../js/script.js"></script>
 </body>
 </html>

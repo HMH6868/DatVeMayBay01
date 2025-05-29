@@ -14,6 +14,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Add logging middleware to debug API requests
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    next();
+});
+
 // Database setup
 let db;
 async function setupDatabase() {
@@ -22,7 +28,7 @@ async function setupDatabase() {
         driver: sqlite3.Database
     });
 
-    // Create flights table if it doesn't exist
+    // Create tables if they don't exist
     await db.exec(`
         CREATE TABLE IF NOT EXISTS flights (
             flight_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,11 +93,39 @@ async function setupDatabase() {
             promo_code TEXT,                        -- Mã khuyến mãi nếu có
             passengers_info TEXT,                   -- Additional passenger information
             is_round_trip BOOLEAN DEFAULT 0,        -- Flag to indicate if this is a round-trip booking
+            should_refund BOOLEAN DEFAULT 0,        -- Flag to indicate if a refund should be processed
+            cancelled_by_admin BOOLEAN DEFAULT 0,   -- Flag to indicate if cancellation was done by admin
             FOREIGN KEY (user_id) REFERENCES users(user_id),
             FOREIGN KEY (departure_flight_id) REFERENCES flights(flight_id),
             FOREIGN KEY (return_flight_id) REFERENCES flights(flight_id)
         );
+    `);
 
+    // Add migration check for the should_refund column
+    try {
+        // Check if should_refund column exists in the bookings table
+        const tableInfo = await db.all('PRAGMA table_info(bookings)');
+        const hasSholdRefundColumn = tableInfo.some(column => column.name === 'should_refund');
+        const hasCancelledByAdminColumn = tableInfo.some(column => column.name === 'cancelled_by_admin');
+        
+        // Add the columns if they don't exist
+        if (!hasSholdRefundColumn) {
+            console.log('Adding should_refund column to bookings table...');
+            await db.exec('ALTER TABLE bookings ADD COLUMN should_refund BOOLEAN DEFAULT 0');
+            console.log('should_refund column added successfully');
+        }
+        
+        if (!hasCancelledByAdminColumn) {
+            console.log('Adding cancelled_by_admin column to bookings table...');
+            await db.exec('ALTER TABLE bookings ADD COLUMN cancelled_by_admin BOOLEAN DEFAULT 0');
+            console.log('cancelled_by_admin column added successfully');
+        }
+    } catch (migrationError) {
+        console.error('Error during database migration:', migrationError);
+    }
+
+    // Continue with the rest of the setup
+    await db.exec(`
         -- Bảng BOOKING_DETAILS
         CREATE TABLE IF NOT EXISTS booking_details (            
             detail_id INTEGER PRIMARY KEY AUTOINCREMENT,            
@@ -1021,8 +1055,8 @@ app.post('/api/bookings', async (req, res) => {
         await db.run(`
             INSERT INTO bookings (
                 booking_id, user_id, departure_flight_id, return_flight_id, contact_name, email, phone, travel_class, 
-                total_amount, booking_time, payment_status, promo_code, passengers_info, is_round_trip
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                total_amount, booking_time, payment_status, promo_code, passengers_info, is_round_trip, should_refund, cancelled_by_admin
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
             bookingId,
             userId, // Include userId here
@@ -1037,7 +1071,9 @@ app.post('/api/bookings', async (req, res) => {
             'unpaid',
             promoCode || null,
             passengerCountsJSON,
-            finalIsRoundTrip ? 1 : 0
+            finalIsRoundTrip ? 1 : 0,
+            0,  // should_refund initialized to 0
+            0   // cancelled_by_admin initialized to 0
         ]);
         
         // Check and sanitize passenger data
@@ -1173,13 +1209,21 @@ app.get('/api/bookings/:id', async (req, res) => {
         // Get payment information
         const paymentInfo = await db.get('SELECT * FROM payments WHERE booking_id = ?', [bookingId]);
         
-        res.json({
+        // Format the response
+        const response = {
             booking,
             departureFlight: formatFlightForClient(departureFlight),
             returnFlight: returnFlight ? formatFlightForClient(returnFlight) : null,
             passengers,
             paymentInfo
-        });
+        };
+        
+        // Include the should_refund flag in the response if status is cancelled
+        if (booking.payment_status === 'cancelled') {
+            response.shouldRefund = booking.should_refund === 1;
+        }
+        
+        res.json(response);
     } catch (error) {
         console.error('Error fetching booking:', error);
         res.status(500).json({ error: 'Failed to fetch booking details' });
@@ -1201,6 +1245,12 @@ app.patch('/api/bookings/:id/payment', async (req, res) => {
         
         if (!currentBooking) {
             return res.status(404).json({ error: 'Booking not found' });
+        }
+        
+        // Determine if a refund is applicable (only when changing from paid to cancelled)
+        let shouldRefund = false;
+        if (paymentStatus === 'cancelled' && currentBooking.payment_status === 'paid') {
+            shouldRefund = true;
         }
         
         // Handle promotion code usage when the booking status changes to paid
@@ -1262,17 +1312,21 @@ app.patch('/api/bookings/:id/payment', async (req, res) => {
             }
         }
         
-        // Update booking payment status
+        // Update booking payment status with refund flag
         const result = await db.run(
-            'UPDATE bookings SET payment_status = ? WHERE booking_id = ?',
-            [paymentStatus, bookingId]
+            'UPDATE bookings SET payment_status = ?, should_refund = ?, cancelled_by_admin = ? WHERE booking_id = ?',
+            [paymentStatus, shouldRefund ? 1 : 0, 0, bookingId]
         );
         
         if (result.changes === 0) {
             return res.status(404).json({ error: 'Booking not found' });
         }
         
-        res.json({ success: true, message: 'Payment status updated successfully' });
+        res.json({ 
+            success: true, 
+            message: 'Payment status updated successfully',
+            shouldRefund: shouldRefund
+        });
     } catch (error) {
         console.error('Error updating payment status:', error);
         res.status(500).json({ error: 'Failed to update payment status' });
@@ -1674,6 +1728,15 @@ app.patch('/api/admin/bookings/:id/payment', async (req, res) => {
             return res.status(404).json({ error: 'Booking not found' });
         }
         
+        // Determine if a refund is applicable (only when changing from paid to cancelled)
+        let shouldRefund = false;
+        if (paymentStatus === 'cancelled' && currentBooking.payment_status === 'paid') {
+            shouldRefund = true;
+        }
+        
+        // Set cancelled_by_admin flag when admin cancels a booking
+        const cancelledByAdmin = paymentStatus === 'cancelled' ? 1 : 0;
+        
         // Handle promotion code usage when the booking status changes to paid
         if (paymentStatus === 'paid' && currentBooking.payment_status !== 'paid' && currentBooking.promo_code) {
             // Get promotion details
@@ -1733,17 +1796,23 @@ app.patch('/api/admin/bookings/:id/payment', async (req, res) => {
             }
         }
         
-        // Update booking payment status
+        // Update booking payment status with refund flag and cancelled_by_admin flag
         const result = await db.run(
-            'UPDATE bookings SET payment_status = ? WHERE booking_id = ?',
-            [paymentStatus, bookingId]
+            'UPDATE bookings SET payment_status = ?, should_refund = ?, cancelled_by_admin = ? WHERE booking_id = ?',
+            [paymentStatus, shouldRefund ? 1 : 0, cancelledByAdmin, bookingId]
         );
         
         if (result.changes === 0) {
             return res.status(404).json({ error: 'Booking not found' });
         }
         
-        res.json({ success: true, message: 'Payment status updated successfully', paymentStatus });
+        res.json({ 
+            success: true, 
+            message: 'Payment status updated successfully', 
+            paymentStatus,
+            shouldRefund: shouldRefund,
+            cancelledByAdmin: cancelledByAdmin === 1
+        });
     } catch (error) {
         console.error('Error updating payment status:', error);
         res.status(500).json({ error: 'Failed to update payment status' });
@@ -3063,6 +3132,9 @@ app.post('/api/bookings/:id/cancel', async (req, res) => {
             return res.status(400).json({ error: 'This booking is already cancelled' });
         }
         
+        // Determine if a refund should be processed based on the current payment status
+        const shouldRefund = booking.payment_status === 'paid';
+        
         // Get the number of passengers in this booking
         const passengerCount = await db.get('SELECT COUNT(*) as count FROM booking_details WHERE booking_id = ?', [bookingId]);
         
@@ -3105,13 +3177,17 @@ app.post('/api/bookings/:id/cancel', async (req, res) => {
             `, [passengerCount.count, passengerCount.count, booking.return_flight_id]);
         }
         
-        // Update booking status to cancelled
-        await db.run('UPDATE bookings SET payment_status = ? WHERE booking_id = ?', ['cancelled', bookingId]);
+        // Update booking status to cancelled and set the should_refund flag
+        await db.run(
+            'UPDATE bookings SET payment_status = ?, should_refund = ?, cancelled_by_admin = ? WHERE booking_id = ?', 
+            ['cancelled', shouldRefund ? 1 : 0, 0, bookingId]
+        );
         
         res.json({ 
             success: true, 
             message: 'Booking cancelled successfully',
-            bookingId: bookingId 
+            bookingId: bookingId,
+            shouldRefund: shouldRefund
         });
     } catch (error) {
         console.error('Error cancelling booking:', error);
@@ -3226,13 +3302,240 @@ app.get('/api/bookings/:id', async (req, res) => {
     }
 });
 
-// Add a catch-all route for debugging
-app.use((req, res, next) => {
-    console.log(`Unhandled request: ${req.method} ${req.path}`);
+// Admin API: Get all customers - Move this up before the catch-all route
+// Delete the duplicate version further down
+app.get('/api/admin/customers', async (req, res) => {
+    console.log('Admin customers API called with query:', req.query);
+    try {
+        const { name, email, phone, page = 1, limit = 10 } = req.query;
+        
+        // Build query with filters
+        let query = 'SELECT user_id, fullname, email, phone, created_at, last_login FROM users WHERE 1=1';
+        const params = [];
+
+        if (name) {
+            query += ' AND fullname LIKE ?';
+            params.push(`%${name}%`);
+        }
+
+        if (email) {
+            query += ' AND email LIKE ?';
+            params.push(`%${email}%`);
+        }
+
+        if (phone) {
+            query += ' AND phone LIKE ?';
+            params.push(`%${phone}%`);
+        }
+
+        // Count total records for pagination
+        const countQuery = query.replace('SELECT user_id, fullname, email, phone, created_at, last_login', 'SELECT COUNT(*) as count');
+        const countResult = await db.get(countQuery, params);
+        const totalCount = countResult.count || 0;
+
+        // Add pagination
+        const offset = (page - 1) * limit;
+        query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+        params.push(parseInt(limit), offset);
+
+        // Get customers
+        const customers = await db.all(query, params);
+
+        // Get booking counts for each customer
+        for (const customer of customers) {
+            const bookingCount = await db.get('SELECT COUNT(*) as count FROM bookings WHERE user_id = ?', [customer.user_id]);
+            customer.total_bookings = bookingCount.count || 0;
+        }
+
+        res.json({
+            customers,
+            pagination: {
+                total: totalCount,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                pages: Math.ceil(totalCount / limit)
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching customers:', error);
+        res.status(500).json({ error: 'Failed to fetch customers' });
+    }
+});
+
+// Admin API: Get single customer details
+app.get('/api/admin/customers/:id', async (req, res) => {
+    try {
+        const userId = req.params.id;
+        
+        // Get customer details
+        const customer = await db.get(
+            'SELECT user_id, fullname, email, phone, created_at, last_login, status FROM users WHERE user_id = ?', 
+            [userId]
+        );
+        
+        if (!customer) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+        
+        // Get customer's bookings
+        const bookings = await db.all(
+            'SELECT booking_id, contact_name, email, phone, total_amount, booking_time, payment_status FROM bookings WHERE user_id = ? ORDER BY booking_time DESC',
+            [userId]
+        );
+        
+        // Return complete customer info
+        res.json({
+            customer,
+            bookings
+        });
+    } catch (error) {
+        console.error('Error fetching customer details:', error);
+        res.status(500).json({ error: 'Failed to fetch customer details' });
+    }
+});
+
+// Admin API: Create a new customer
+app.post('/api/admin/customers', async (req, res) => {
+    try {
+        const { fullname, email, phone, address, dateOfBirth, gender, password } = req.body;
+        
+        // Validate required fields
+        if (!fullname || !email) {
+            return res.status(400).json({ error: 'Full name and email are required' });
+        }
+        
+        // Check if email already exists
+        const existingUser = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+        if (existingUser) {
+            return res.status(409).json({ error: 'Email already exists' });
+        }
+        
+        // Generate a default password if not provided
+        let hashedPassword;
+        if (password) {
+            hashedPassword = await bcrypt.hash(password, 10);
+        } else {
+            // Default password is the first part of email + "123"
+            const defaultPassword = email.split('@')[0] + '123';
+            hashedPassword = await bcrypt.hash(defaultPassword, 10);
+        }
+        
+        // Insert new user
+        const result = await db.run(
+            'INSERT INTO users (fullname, email, phone, password) VALUES (?, ?, ?, ?)',
+            [fullname, email, phone || null, hashedPassword]
+        );
+        
+        // Get the newly created user
+        const newUser = await db.get(
+            'SELECT user_id, fullname, email, phone, created_at FROM users WHERE user_id = ?',
+            [result.lastID]
+        );
+        
+        res.status(201).json({
+            success: true,
+            message: 'Customer created successfully',
+            customer: newUser
+        });
+    } catch (error) {
+        console.error('Error creating customer:', error);
+        res.status(500).json({ error: 'Failed to create customer' });
+    }
+});
+
+// Admin API: Update a customer
+app.put('/api/admin/customers/:id', async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { fullname, email, phone, status } = req.body;
+        
+        // Check if customer exists
+        const existingUser = await db.get('SELECT * FROM users WHERE user_id = ?', [userId]);
+        if (!existingUser) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+        
+        // Check if email is being changed and already exists
+        if (email !== existingUser.email) {
+            const emailExists = await db.get('SELECT * FROM users WHERE email = ? AND user_id != ?', [email, userId]);
+            if (emailExists) {
+                return res.status(409).json({ error: 'Email already exists for another customer' });
+            }
+        }
+        
+        // Update user
+        await db.run(
+            'UPDATE users SET fullname = ?, email = ?, phone = ?, status = ? WHERE user_id = ?',
+            [fullname, email, phone || null, status || existingUser.status, userId]
+        );
+        
+        // Get the updated user
+        const updatedUser = await db.get(
+            'SELECT user_id, fullname, email, phone, created_at, last_login, status FROM users WHERE user_id = ?',
+            [userId]
+        );
+        
+        res.json({
+            success: true,
+            message: 'Customer updated successfully',
+            customer: updatedUser
+        });
+    } catch (error) {
+        console.error('Error updating customer:', error);
+        res.status(500).json({ error: 'Failed to update customer' });
+    }
+});
+
+// Admin API: Delete a customer
+app.delete('/api/admin/customers/:id', async (req, res) => {
+    try {
+        const userId = req.params.id;
+        
+        // Check if customer exists
+        const existingUser = await db.get('SELECT * FROM users WHERE user_id = ?', [userId]);
+        if (!existingUser) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+        
+        // Check if customer has any bookings
+        const bookings = await db.get('SELECT COUNT(*) as count FROM bookings WHERE user_id = ?', [userId]);
+        if (bookings.count > 0) {
+            // Instead of deleting, set status to inactive
+            await db.run('UPDATE users SET status = ? WHERE user_id = ?', ['inactive', userId]);
+            
+            return res.json({
+                success: true,
+                message: 'Customer has bookings and cannot be deleted. Status set to inactive.',
+                status: 'inactive'
+            });
+        }
+        
+        // Delete any sessions
+        await db.run('DELETE FROM user_sessions WHERE user_id = ?', [userId]);
+        
+        // Delete the user
+        await db.run('DELETE FROM users WHERE user_id = ?', [userId]);
+        
+        res.json({
+            success: true,
+            message: 'Customer deleted successfully'
+        });
+    } catch (error) {
+        console.error('Error deleting customer:', error);
+        res.status(500).json({ error: 'Failed to delete customer' });
+    }
+});
+
+// Static file serving - moved to after API routes
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Add a catch-all route for API requests debugging - This should be AFTER all API routes
+app.use('/api', (req, res) => {
+    console.log(`Unhandled API request: ${req.method} ${req.originalUrl}`);
     res.status(404).json({ 
-        error: 'Route not found', 
+        error: 'API route not found', 
         method: req.method,
-        path: req.path,
+        path: req.originalUrl,
         availableRoutes: [
             'GET /api/test',
             'GET /api/bookings/user',
@@ -3241,123 +3544,12 @@ app.use((req, res, next) => {
             'POST /api/bookings',
             'GET /api/bookings/:id',
             'PATCH /api/bookings/:id/payment',
-            'POST /api/bookings/:id/cancel'
+            'POST /api/bookings/:id/cancel',
+            'GET /api/admin/customers',
+            'GET /api/admin/customers/:id',
+            'POST /api/admin/customers',
+            'PUT /api/admin/customers/:id',
+            'DELETE /api/admin/customers/:id'
         ]
     });
-});
-
-// Static file serving - moved to after API routes
-app.use(express.static(path.join(__dirname, 'public')));
-
-// New endpoint with a different path to avoid conflicts
-app.get('/api/user/bookings', async (req, res) => {
-    console.log('GET /api/user/bookings endpoint called');
-    try {
-        const sessionId = req.headers.authorization;
-        console.log('Session ID:', sessionId);
-        
-        if (!sessionId) {
-            console.log('No session ID provided');
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
-        
-        // Check if session exists and is valid
-        const session = await db.get(
-            'SELECT * FROM user_sessions WHERE session_id = ? AND is_active = 1 AND expire_time > CURRENT_TIMESTAMP',
-            [sessionId]
-        );
-        console.log('Session found:', session ? 'Yes' : 'No');
-        
-        if (!session) {
-            console.log('Invalid or expired session');
-            return res.status(401).json({ error: 'Invalid or expired session' });
-        }
-        
-        console.log('User ID from session:', session.user_id);
-        
-        // Get user's bookings
-        const bookings = await db.all('SELECT * FROM bookings WHERE user_id = ? ORDER BY booking_time DESC', [session.user_id]);
-        console.log(`Found ${bookings.length} bookings for user`);
-        
-        // Format bookings data for the client
-        const formattedBookings = [];
-        
-        for (const booking of bookings) {
-            console.log(`Processing booking ID: ${booking.booking_id}`);
-            try {
-                // Get departure flight
-                const departureFlight = await db.get('SELECT * FROM flights WHERE flight_id = ?', [booking.departure_flight_id]);
-                
-                // Get return flight if this is a round trip
-                let returnFlight = null;
-                if (booking.is_round_trip === 1 && booking.return_flight_id) {
-                    returnFlight = await db.get('SELECT * FROM flights WHERE flight_id = ?', [booking.return_flight_id]);
-                }
-                
-                // Get passengers
-                const passengers = await db.all('SELECT * FROM booking_details WHERE booking_id = ?', [booking.booking_id]);
-                console.log(`Found ${passengers.length} passengers for booking ${booking.booking_id}`);
-                
-                // Format the booking data
-                const formattedBooking = {
-                    id: booking.booking_id,
-                    bookingNumber: booking.booking_id,
-                    status: booking.payment_status,
-                    bookingDate: booking.booking_time,
-                    totalPrice: booking.total_amount,
-                    flights: [
-                        {
-                            type: 'outbound',
-                            flightNumber: departureFlight ? `${departureFlight.airline_code}${departureFlight.flight_number}` : 'N/A',
-                            airline: departureFlight ? departureFlight.airline : 'N/A',
-                            departureCode: departureFlight ? departureFlight.departure_airport : 'N/A',
-                            arrivalCode: departureFlight ? departureFlight.arrival_airport : 'N/A',
-                            departureTime: departureFlight ? departureFlight.departure_time : null,
-                            arrivalTime: departureFlight ? departureFlight.arrival_time : null,
-                            seatClass: booking.travel_class
-                        }
-                    ],
-                    passengers: passengers.map(p => ({
-                        name: p.full_name,
-                        type: p.passenger_type.toLowerCase(),
-                        passportNumber: p.passport_number
-                    })),
-                    contactInfo: {
-                        name: booking.contact_name,
-                        email: booking.email,
-                        phone: booking.phone
-                    },
-                    payment: {
-                        method: booking.payment_method || 'N/A',
-                        status: booking.payment_status
-                    }
-                };
-                
-                // Add return flight if exists
-                if (returnFlight) {
-                    formattedBooking.flights.push({
-                        type: 'return',
-                        flightNumber: `${returnFlight.airline_code}${returnFlight.flight_number}`,
-                        airline: returnFlight.airline,
-                        departureCode: returnFlight.departure_airport,
-                        arrivalCode: returnFlight.arrival_airport,
-                        departureTime: returnFlight.departure_time,
-                        arrivalTime: returnFlight.arrival_time,
-                        seatClass: booking.travel_class
-                    });
-                }
-                
-                formattedBookings.push(formattedBooking);
-            } catch (bookingError) {
-                console.error(`Error processing booking ${booking.booking_id}:`, bookingError);
-                // Continue with the next booking
-            }
-        }
-        
-        console.log(`Returning ${formattedBookings.length} formatted bookings`);
-        res.json({ bookings: formattedBookings });
-    } catch (error) {
-        console.error('Error fetching user bookings:', error);
-        res.status(500).json({ error: 'Failed to fetch bookings', details: error.message });
-    }
 });

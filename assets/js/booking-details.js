@@ -467,7 +467,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         method: paymentInfo.method || 'unknown',
                         status: booking.payment_status === 'paid' ? 'completed' : booking.payment_status,
                         date: paymentInfo.payment_date || booking.booking_time
-                    }
+                    },
+                    // Add refund-related properties
+                    should_refund: booking.should_refund === 1,
+                    cancelled_by_admin: booking.cancelled_by_admin === 1
                 };
                 
                 // Add departure flight
@@ -569,6 +572,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         paymentStatusEl.textContent = paymentStatusText;
         
         paymentDateEl.textContent = booking.payment.date ? formatDate(booking.payment.date) : 'N/A';
+
+        // Handle refund information for cancelled bookings
+        const refundInfoSection = document.getElementById('refund-info');
+        const refundMessage = document.getElementById('refund-message');
+        const totalPaidAmount = document.getElementById('total-paid-amount');
+        const cancellationFee = document.getElementById('cancellation-fee');
+        const refundAmount = document.getElementById('refund-amount');
+        const feeRow = document.getElementById('fee-row');
+        
+        if (booking.status.toLowerCase() === 'cancelled' && booking.should_refund) {
+            // Calculate refund amounts
+            const totalAmount = booking.totalPrice;
+            let feeAmount = 0;
+            let refundAmountValue = totalAmount;
+            
+            // Check if cancellation was done by admin
+            if (booking.cancelled_by_admin) {
+                // 100% refund if cancelled by admin
+                feeRow.style.display = 'none';
+                refundMessage.textContent = 'Đặt vé của bạn đã bị hủy bởi hãng hàng không hoặc hệ thống. Bạn sẽ được hoàn lại 100% số tiền đã thanh toán trong vòng 24 giờ.';
+            } else {
+                // 80% refund if cancelled by user
+                feeAmount = totalAmount * 0.2;
+                refundAmountValue = totalAmount * 0.8;
+                feeRow.style.display = 'flex';
+                refundMessage.textContent = 'Đặt vé của bạn đã được hủy thành công. Bạn sẽ được hoàn lại 80% số tiền đã thanh toán trong vòng 24 giờ (phí hủy vé 20%).';
+                cancellationFee.textContent = formatCurrency(feeAmount);
+            }
+            
+            totalPaidAmount.textContent = formatCurrency(totalAmount);
+            refundAmount.textContent = formatCurrency(refundAmountValue);
+            refundInfoSection.style.display = 'block';
+        } else {
+            refundInfoSection.style.display = 'none';
+        }
         
         // Display price details
         priceDetailsEl.innerHTML = '';
@@ -580,6 +618,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnCancel.style.display = 'inline-block';
         } else {
             btnCancel.style.display = 'none';
+        }
+
+        // Hide print button if booking is cancelled
+        if (booking.status.toLowerCase() === 'cancelled') {
+            btnPrint.style.display = 'none';
+        } else {
+            btnPrint.style.display = 'inline-block';
         }
         
         // Show booking details
@@ -650,4 +695,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Start the application
     initialize();
-}); 
+});
