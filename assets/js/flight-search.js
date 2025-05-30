@@ -1,30 +1,6 @@
 // Constants
 const API_BASE_URL = 'http://localhost:3000/api';
 
-// Travel class mapping for display
-const travelClassNames = {
-    'ECONOMY': 'Phổ thông',
-    'BUSINESS': 'Thương gia'
-};
-
-// Price multipliers by travel class
-const travelClassMultipliers = {
-    'ECONOMY': 1,
-    'BUSINESS': 2.5
-};
-
-// Luggage allowance by travel class (in kg)
-const luggageAllowance = {
-    'ECONOMY': '15kg',
-    'BUSINESS': '30kg'
-};
-
-// Meal service by travel class
-const mealService = {
-    'ECONOMY': 'Bữa ăn nhẹ',
-    'BUSINESS': 'Bữa ăn đầy đủ'
-};
-
 document.addEventListener('DOMContentLoaded', function() {
     console.log("Flight search page loaded");
     
@@ -789,7 +765,9 @@ function timeToMinutes(timeStr) {
 function getSeatClassName(seatClass) {
     const seatClassNames = {
         'ECONOMY': 'Phổ thông',
-        'BUSINESS': 'Thương gia'
+        'PREMIUM_ECONOMY': 'Phổ thông đặc biệt',
+        'BUSINESS': 'Thương gia',
+        'FIRST': 'Thương gia hạng nhất'
     };
     return seatClassNames[seatClass] || 'Phổ thông';
 }
@@ -805,8 +783,12 @@ function getPriceForSeatClass(flight, seatClass) {
         
         // Then try the specific price fields
         switch (seatClass) {
+            case 'PREMIUM_ECONOMY':
+                return flight.price_premium_economy || flight.price_economy || flight.price;
             case 'BUSINESS':
                 return flight.price_business || flight.price_economy || flight.price;
+            case 'FIRST':
+                return flight.price_first || flight.price_economy || flight.price;
             case 'ECONOMY':
             default:
                 return flight.price_economy || flight.price;
@@ -816,7 +798,10 @@ function getPriceForSeatClass(flight, seatClass) {
     // For backward compatibility - if just a base price was passed
     const basePrice = typeof flight === 'number' ? flight : (flight?.price || 0);
     const multipliers = {
-        'BUSINESS': 2.5
+        'ECONOMY': 1,
+        'PREMIUM_ECONOMY': 1.5,
+        'BUSINESS': 2.5,
+        'FIRST': 4
     };
     return Math.round(basePrice * (multipliers[seatClass] || 1));
 }
@@ -886,7 +871,9 @@ function calculateArrivalDate(departDate, departureTime, arrivalTime) {
 function getBaggageAllowance(seatClass) {
     const baggageAllowances = {
         'ECONOMY': '15kg',
-        'BUSINESS': '30kg'
+        'PREMIUM_ECONOMY': '20kg',
+        'BUSINESS': '30kg',
+        'FIRST': '40kg'
     };
     return baggageAllowances[seatClass] || 'N/A';
 }
@@ -894,8 +881,10 @@ function getBaggageAllowance(seatClass) {
 // Helper function to get meal information based on seat class
 function getMealInfo(seatClass) {
     const mealInfos = {
-        'ECONOMY': 'Bữa ăn nhẹ',
-        'BUSINESS': 'Bữa ăn đầy đủ'
+        'ECONOMY': 'Không có bữa ăn',
+        'PREMIUM_ECONOMY': 'Bữa ăn đơn giản',
+        'BUSINESS': 'Bữa ăn đầy đủ',
+        'FIRST': 'Bữa ăn đầy đủ'
     };
     return mealInfos[seatClass] || 'N/A';
 }
@@ -911,8 +900,12 @@ function getAvailableSeatsForClass(flight, seatClass) {
     
     // Fallback to individual seat class properties
     switch(seatClass) {
+        case 'PREMIUM_ECONOMY':
+            return flight.seats_premium_economy || 'N/A';
         case 'BUSINESS':
             return flight.seats_business || 'N/A';
+        case 'FIRST':
+            return flight.seats_first || 'N/A';
         case 'ECONOMY':
         default:
             return flight.seats_economy || 'N/A';

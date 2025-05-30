@@ -212,7 +212,9 @@ document.addEventListener('DOMContentLoaded', function() {
             let formattedClasses = '';
             
             if (availableClasses.includes('ECONOMY')) formattedClasses += '<span class="badge bg-success me-1">PT</span>';
+            if (availableClasses.includes('PREMIUM_ECONOMY')) formattedClasses += '<span class="badge bg-info me-1">PĐB</span>';
             if (availableClasses.includes('BUSINESS')) formattedClasses += '<span class="badge bg-primary me-1">TG</span>';
+            if (availableClasses.includes('FIRST')) formattedClasses += '<span class="badge bg-warning me-1">HN</span>';
             
             tr.innerHTML = `
                 <td>${flight.flight_id || flight.id}</td>
@@ -429,7 +431,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Set seat values for each class
         document.getElementById('economy-seats').value = flight.seats_economy || 0;
+        document.getElementById('premium-seats').value = flight.seats_premium_economy || 0;
         document.getElementById('business-seats').value = flight.seats_business || 0;
+        document.getElementById('first-seats').value = flight.seats_first || 0;
         
         document.getElementById('flight-modal-label').textContent = 'Chỉnh sửa chuyến bay';
         flightModal.show();
@@ -446,7 +450,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Set default values
         document.getElementById('economy-class').checked = true;
+        document.getElementById('premium-economy-class').checked = false;
         document.getElementById('business-class').checked = false;
+        document.getElementById('first-class').checked = false;
         
         // Set default dates to tomorrow
         const tomorrow = new Date();
@@ -499,18 +505,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const seatsEconomy = document.getElementById('economy-class').checked ? 
             parseInt(document.getElementById('economy-seats').value) || 0 : 0;
             
+        const seatsPremiumEconomy = document.getElementById('premium-economy-class').checked ? 
+            parseInt(document.getElementById('premium-seats').value) || 0 : 0;
+            
         const seatsBusiness = document.getElementById('business-class').checked ? 
             parseInt(document.getElementById('business-seats').value) || 0 : 0;
+            
+        const seatsFirst = document.getElementById('first-class').checked ? 
+            parseInt(document.getElementById('first-seats').value) || 0 : 0;
         
         // Calculate total seats
-        const totalSeats = seatsEconomy + seatsBusiness;
+        const totalSeats = seatsEconomy + seatsPremiumEconomy + seatsBusiness + seatsFirst;
         
         // Get base economy price and calculate other prices with multipliers
         const priceEconomy = parseFloat(document.getElementById('price').value) || 0;
         
         // Automatically calculate prices for other classes with standard multipliers
+        const pricePremiumEconomy = document.getElementById('premium-economy-class').checked ? 
+            Math.round(priceEconomy * 1.5) : null;
+            
         const priceBusiness = document.getElementById('business-class').checked ? 
             Math.round(priceEconomy * 2.5) : null;
+            
+        const priceFirst = document.getElementById('first-class').checked ? 
+            Math.round(priceEconomy * 4.0) : null;
         
         return {
             flight_id: document.getElementById('flight-id').value,
@@ -522,9 +540,13 @@ document.addEventListener('DOMContentLoaded', function() {
             departure_time: document.getElementById('departure-time').value,
             arrival_time: document.getElementById('arrival-time').value,
             price_economy: priceEconomy,
+            price_premium_economy: pricePremiumEconomy,
             price_business: priceBusiness,
+            price_first: priceFirst,
             seats_economy: seatsEconomy,
+            seats_premium_economy: seatsPremiumEconomy,
             seats_business: seatsBusiness,
+            seats_first: seatsFirst,
             available_seats: totalSeats,
             status: document.getElementById('status').value,
             available_classes: availableClasses.join(',')
@@ -569,8 +591,18 @@ document.addEventListener('DOMContentLoaded', function() {
             missingData = true;
         }
         
+        if (classes.includes('PREMIUM_ECONOMY') && !flightData.seats_premium_economy) {
+            errorMessage += ' Phổ thông đặc biệt,';
+            missingData = true;
+        }
+        
         if (classes.includes('BUSINESS') && !flightData.seats_business) {
             errorMessage += ' Thương gia,';
+            missingData = true;
+        }
+        
+        if (classes.includes('FIRST') && !flightData.seats_first) {
+            errorMessage += ' Hạng nhất,';
             missingData = true;
         }
         

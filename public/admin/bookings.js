@@ -183,7 +183,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Format travel class
             const travelClassMap = {
                 'ECONOMY': 'Phổ thông',
-                'BUSINESS': 'Thương gia'
+                'PREMIUM_ECONOMY': 'Phổ thông đặc biệt',
+                'BUSINESS': 'Thương gia',
+                'FIRST': 'Thương gia hạng nhất'
             };
             
             const travelClass = travelClassMap[booking.travel_class] || booking.travel_class;
@@ -387,7 +389,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Format travel class
         const travelClassMap = {
             'ECONOMY': 'Phổ thông',
-            'BUSINESS': 'Thương gia'
+            'PREMIUM_ECONOMY': 'Phổ thông đặc biệt',
+            'BUSINESS': 'Thương gia',
+            'FIRST': 'Thương gia hạng nhất'
         };
         
         const travelClass = travelClassMap[booking.travel_class] || booking.travel_class;
