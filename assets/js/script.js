@@ -3240,8 +3240,8 @@ function createUserDropdown(userLink, userData) {
             <span class="user-email">${userData.email}</span>
         </div>
         <ul class="dropdown-menu">
-            <li><a href="${window.location.pathname.includes('assets/pages/') ? 'profile.html' : 'assets/pages/profile.html'}"><i class="fas fa-user-circle"></i> Thông tin tài khoản</a></li>
-            <li><a href="${window.location.pathname.includes('assets/pages/') ? 'my-bookings.html' : 'assets/pages/my-bookings.html'}"><i class="fas fa-ticket-alt"></i> Đặt chỗ của tôi</a></li>
+            <li><a href="${window.location.pathname.includes('assets/pages/') ? 'profile.html' : 'assets/pages/profile.html"}"><i class="fas fa-user-circle"></i> Thông tin tài khoản</a></li>
+            <li><a href="${window.location.pathname.includes('assets/pages/') ? 'my-bookings.html' : 'assets/pages/my-bookings.html"}"><i class="fas fa-ticket-alt"></i> Đặt chỗ của tôi</a></li>
             <li><a href="#" id="logout-button"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
         </ul>
     `;
@@ -3408,3 +3408,15 @@ function logout() {
         window.location.href = isInSubfolder ? '../../index.html' : 'index.html';
     }
 }
+
+// Travel class mapping for display
+const travelClassNames = {
+    'ECONOMY': 'Phổ thông',
+    'BUSINESS': 'Thương gia'
+};
+
+// Price multipliers by travel class
+const travelClassMultipliers = {
+    'ECONOMY': 1,
+    'BUSINESS': 2.5
+};

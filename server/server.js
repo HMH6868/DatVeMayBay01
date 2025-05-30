@@ -41,13 +41,9 @@ async function setupDatabase() {
             arrival_time DATETIME NOT NULL,
             duration TEXT NOT NULL,
             price_economy REAL NOT NULL,
-            price_premium_economy REAL,
             price_business REAL,
-            price_first REAL,
             seats_economy INTEGER NOT NULL,
-            seats_premium_economy INTEGER,
             seats_business INTEGER,
-            seats_first INTEGER,
             available_seats INTEGER NOT NULL,  -- Total count (kept for backward compatibility)
             status TEXT DEFAULT 'scheduled',
             available_classes TEXT NOT NULL
@@ -369,8 +365,8 @@ app.post('/api/flights', async (req, res) => {
             airline, airline_code, flight_number, 
             departure_airport, arrival_airport, 
             departure_time, arrival_time, 
-            price_economy, price_premium_economy, price_business, price_first,
-            seats_economy, seats_premium_economy, seats_business, seats_first,
+            price_economy, price_business,
+            seats_economy, seats_business,
             status, available_classes 
         } = req.body;
 
@@ -400,15 +396,15 @@ app.post('/api/flights', async (req, res) => {
             INSERT INTO flights (
                 airline, airline_code, flight_number, departure_airport, arrival_airport, 
                 departure_time, arrival_time, duration,
-                price_economy, price_premium_economy, price_business, price_first,
-                seats_economy, seats_premium_economy, seats_business, seats_first,
+                price_economy, price_business,
+                seats_economy, seats_business,
                 available_seats, status, available_classes
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
             airline, airline_code, flight_number, departure_airport, arrival_airport, 
             departure_time, arrival_time, duration,
-            price_economy, price_premium_economy, price_business, price_first,
-            seats_economy, seats_premium_economy, seats_business, seats_first,
+            price_economy, price_business,
+            seats_economy, seats_business,
             total_seats, status || 'scheduled', availableClassesString
         ]);
 
@@ -428,8 +424,8 @@ app.put('/api/flights/:id', async (req, res) => {
             airline, airline_code, flight_number, 
             departure_airport, arrival_airport, 
             departure_time, arrival_time, 
-            price_economy, price_premium_economy, price_business, price_first,
-            seats_economy, seats_premium_economy, seats_business, seats_first,
+            price_economy, price_business,
+            seats_economy, seats_business,
             available_seats, status, 
             available_classes 
         } = req.body;
@@ -470,16 +466,16 @@ app.put('/api/flights/:id', async (req, res) => {
                 airline = ?, airline_code = ?, flight_number = ?,
                 departure_airport = ?, arrival_airport = ?,
                 departure_time = ?, arrival_time = ?, duration = ?,
-                price_economy = ?, price_premium_economy = ?, price_business = ?, price_first = ?,
-                seats_economy = ?, seats_premium_economy = ?, seats_business = ?, seats_first = ?,
+                price_economy = ?, price_business = ?,
+                seats_economy = ?, seats_business = ?,
                 available_seats = ?, status = ?, available_classes = ?
             WHERE flight_id = ?
         `, [
             airline, airline_code, flight_number,
             departure_airport, arrival_airport,
             departure_time, arrival_time, duration,
-            price_economy, price_premium_economy || null, price_business || null, price_first || null,
-            seats_economy || 0, seats_premium_economy || 0, seats_business || 0, seats_first || 0,
+            price_economy, price_business || null,
+            seats_economy || 0, seats_business || 0,
             available_seats, status, availableClassesString,
             flightId
         ]);
@@ -503,8 +499,8 @@ app.put('/api/flights/code/:flightCode', async (req, res) => {
             airline, airline_code, flight_number, 
             departure_airport, arrival_airport, 
             departure_time, arrival_time, 
-            price_economy, price_premium_economy, price_business, price_first,
-            seats_economy, seats_premium_economy, seats_business, seats_first,
+            price_economy, price_business,
+            seats_economy, seats_business,
             status, available_classes 
         } = req.body;
 
@@ -526,9 +522,7 @@ app.put('/api/flights/code/:flightCode', async (req, res) => {
 
         // Calculate total available seats
         const total_seats = (seats_economy || 0) + 
-                           (seats_premium_economy || 0) + 
-                           (seats_business || 0) + 
-                           (seats_first || 0);
+                           (seats_business || 0);
 
         // Ensure available_classes is in the right format
         const availableClassesString = Array.isArray(available_classes) 
@@ -551,16 +545,16 @@ app.put('/api/flights/code/:flightCode', async (req, res) => {
                 airline = ?, airline_code = ?, flight_number = ?,
                 departure_airport = ?, arrival_airport = ?,
                 departure_time = ?, arrival_time = ?, duration = ?,
-                price_economy = ?, price_premium_economy = ?, price_business = ?, price_first = ?,
-                seats_economy = ?, seats_premium_economy = ?, seats_business = ?, seats_first = ?,
+                price_economy = ?, price_business = ?,
+                seats_economy = ?, seats_business = ?,
                 available_seats = ?, status = ?, available_classes = ?
             WHERE flight_id = ?
         `, [
             airline, airline_code, flight_number,
             departure_airport, arrival_airport,
             departure_time, arrival_time, duration,
-            price_economy, price_premium_economy, price_business, price_first,
-            seats_economy, seats_premium_economy, seats_business, seats_first,
+            price_economy, price_business,
+            seats_economy, seats_business,
             total_seats, status, availableClassesString,
             existingFlight.flight_id
         ]);
@@ -805,16 +799,10 @@ app.post('/api/bookings', async (req, res) => {
         const seatClass = customerInfo.seatClass || 'ECONOMY';
 
         // Determine which seat field to check based on the seat class
-        let seatField, seatValue;
+        let seatField;
         switch(seatClass) {
-            case 'PREMIUM_ECONOMY':
-                seatField = 'seats_premium_economy';
-                break;
             case 'BUSINESS':
                 seatField = 'seats_business';
-                break;
-            case 'FIRST':
-                seatField = 'seats_first';
                 break;
             case 'ECONOMY':
             default:
@@ -841,14 +829,8 @@ app.post('/api/bookings', async (req, res) => {
         if (finalIsRoundTrip && returnFlight) {
             let returnSeatValue;
             switch(seatClass) {
-                case 'PREMIUM_ECONOMY':
-                    returnSeatValue = returnFlight.seats_premium_economy;
-                    break;
                 case 'BUSINESS':
                     returnSeatValue = returnFlight.seats_business;
-                    break;
-                case 'FIRST':
-                    returnSeatValue = returnFlight.seats_first;
                     break;
                 case 'ECONOMY':
                 default:
@@ -884,14 +866,8 @@ app.post('/api/bookings', async (req, res) => {
             
             // Select the appropriate price based on seat class
             switch(seatClass) {
-                case 'PREMIUM_ECONOMY':
-                    basePrice = departureFlight.price_premium_economy || departureFlight.price_economy;
-                    break;
                 case 'BUSINESS':
                     basePrice = departureFlight.price_business || departureFlight.price_economy;
-                    break;
-                case 'FIRST':
-                    basePrice = departureFlight.price_first || departureFlight.price_economy;
                     break;
                 case 'ECONOMY':
                 default:
@@ -925,14 +901,8 @@ app.post('/api/bookings', async (req, res) => {
                 
                 // Select the appropriate price based on seat class
                 switch(seatClass) {
-                    case 'PREMIUM_ECONOMY':
-                        returnBasePrice = returnFlight.price_premium_economy || returnFlight.price_economy;
-                        break;
                     case 'BUSINESS':
                         returnBasePrice = returnFlight.price_business || returnFlight.price_economy;
-                        break;
-                    case 'FIRST':
-                        returnBasePrice = returnFlight.price_first || returnFlight.price_economy;
                         break;
                     case 'ECONOMY':
                     default:
@@ -1019,14 +989,8 @@ app.post('/api/bookings', async (req, res) => {
         if (finalIsRoundTrip && returnFlight) {
             let returnSeatField;
             switch(seatClass) {
-                case 'PREMIUM_ECONOMY':
-                    returnSeatField = 'seats_premium_economy';
-                    break;
                 case 'BUSINESS':
                     returnSeatField = 'seats_business';
-                    break;
-                case 'FIRST':
-                    returnSeatField = 'seats_first';
                     break;
                 case 'ECONOMY':
                 default:
@@ -1278,14 +1242,8 @@ app.patch('/api/bookings/:id/payment', async (req, res) => {
             // Determine which seat field to update based on the seat class
             let seatField;
             switch(seatClass) {
-                case 'PREMIUM_ECONOMY':
-                    seatField = 'seats_premium_economy';
-                    break;
                 case 'BUSINESS':
                     seatField = 'seats_business';
-                    break;
-                case 'FIRST':
-                    seatField = 'seats_first';
                     break;
                 case 'ECONOMY':
                 default:
@@ -1762,14 +1720,8 @@ app.patch('/api/admin/bookings/:id/payment', async (req, res) => {
             // Determine which seat field to update based on the seat class
             let seatField;
             switch(seatClass) {
-                case 'PREMIUM_ECONOMY':
-                    seatField = 'seats_premium_economy';
-                    break;
                 case 'BUSINESS':
                     seatField = 'seats_business';
-                    break;
-                case 'FIRST':
-                    seatField = 'seats_first';
                     break;
                 case 'ECONOMY':
                 default:
@@ -2006,27 +1958,19 @@ function formatFlightForClient(flight) {
         // Include both the legacy price field and the new class-specific prices
         price: basePrice,
         price_economy: flight.price_economy || basePrice,
-        price_premium_economy: flight.price_premium_economy || null,
         price_business: flight.price_business || null,
-        price_first: flight.price_first || null,
         // Create a prices object for easy access
         prices: {
             ECONOMY: flight.price_economy || basePrice,
-            PREMIUM_ECONOMY: flight.price_premium_economy || null,
-            BUSINESS: flight.price_business || null,
-            FIRST: flight.price_first || null
+            BUSINESS: flight.price_business || null
         },
         // Include seats for each class
         seats_economy: flight.seats_economy || 0,
-        seats_premium_economy: flight.seats_premium_economy || 0,
-        seats_business: flight.seats_business || 0, 
-        seats_first: flight.seats_first || 0,
+        seats_business: flight.seats_business || 0,
         // Create a seats object for easy access
         seats: {
             ECONOMY: flight.seats_economy || 0,
-            PREMIUM_ECONOMY: flight.seats_premium_economy || 0,
-            BUSINESS: flight.seats_business || 0,
-            FIRST: flight.seats_first || 0
+            BUSINESS: flight.seats_business || 0
         },
         availableSeats: flight.available_seats,
         available_seats: flight.available_seats,
@@ -2044,21 +1988,18 @@ async function populateSampleFlights() {
         { 
             code: 'VN', 
             name: 'Vietnam Airlines', 
-            classes: ['ECONOMY', 'PREMIUM_ECONOMY', 'BUSINESS', 'FIRST'],
+            classes: ['ECONOMY', 'BUSINESS'],
             seatsConfig: {
                 ECONOMY: { min: 100, max: 150 },
-                PREMIUM_ECONOMY: { min: 30, max: 50 },
-                BUSINESS: { min: 20, max: 30 },
-                FIRST: { min: 8, max: 12 }
+                BUSINESS: { min: 20, max: 30 }
             }
         },
         { 
             code: 'VJ', 
             name: 'Vietjet Air', 
-            classes: ['ECONOMY', 'PREMIUM_ECONOMY'],
+            classes: ['ECONOMY'],
             seatsConfig: {
-                ECONOMY: { min: 150, max: 180 },
-                PREMIUM_ECONOMY: { min: 20, max: 30 }
+                ECONOMY: { min: 150, max: 180 }
             }
         },
         { 
@@ -2072,10 +2013,9 @@ async function populateSampleFlights() {
         { 
             code: 'QH', 
             name: 'Bamboo Airways', 
-            classes: ['ECONOMY', 'PREMIUM_ECONOMY', 'BUSINESS'],
+            classes: ['ECONOMY', 'BUSINESS'],
             seatsConfig: {
                 ECONOMY: { min: 120, max: 160 },
-                PREMIUM_ECONOMY: { min: 20, max: 40 },
                 BUSINESS: { min: 10, max: 20 }
             }
         }
@@ -2097,10 +2037,10 @@ async function populateSampleFlights() {
         INSERT INTO flights (
             airline, airline_code, flight_number, departure_airport, arrival_airport, 
             departure_time, arrival_time, duration, 
-            price_economy, price_premium_economy, price_business, price_first,
-            seats_economy, seats_premium_economy, seats_business, seats_first,
+            price_economy, price_business,
+            seats_economy, seats_business,
             available_seats, status, available_classes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
     let flightCounter = 1000;
@@ -2132,30 +2072,18 @@ async function populateSampleFlights() {
             
             // Calculate prices for other seat classes with some randomness
             // These are now independent prices rather than strict multipliers
-            const premiumEconomyPrice = airlineInfo.classes.includes('PREMIUM_ECONOMY') ? 
-                Math.floor(economyPrice * (1.3 + Math.random() * 0.4)) : null;
-                
             const businessPrice = airlineInfo.classes.includes('BUSINESS') ? 
                 Math.floor(economyPrice * (2.2 + Math.random() * 0.6)) : null;
-                
-            const firstPrice = airlineInfo.classes.includes('FIRST') ? 
-                Math.floor(economyPrice * (3.5 + Math.random() * 1.0)) : null;
             
             // Generate seat quantities for each class
             const seatsEconomy = airlineInfo.classes.includes('ECONOMY') ? 
                 Math.floor(Math.random() * (airlineInfo.seatsConfig.ECONOMY.max - airlineInfo.seatsConfig.ECONOMY.min + 1)) + airlineInfo.seatsConfig.ECONOMY.min : 0;
                 
-            const seatsPremiumEconomy = airlineInfo.classes.includes('PREMIUM_ECONOMY') ?
-                Math.floor(Math.random() * (airlineInfo.seatsConfig.PREMIUM_ECONOMY.max - airlineInfo.seatsConfig.PREMIUM_ECONOMY.min + 1)) + airlineInfo.seatsConfig.PREMIUM_ECONOMY.min : 0;
-                
             const seatsBusiness = airlineInfo.classes.includes('BUSINESS') ?
                 Math.floor(Math.random() * (airlineInfo.seatsConfig.BUSINESS.max - airlineInfo.seatsConfig.BUSINESS.min + 1)) + airlineInfo.seatsConfig.BUSINESS.min : 0;
-                
-            const seatsFirst = airlineInfo.classes.includes('FIRST') ?
-                Math.floor(Math.random() * (airlineInfo.seatsConfig.FIRST.max - airlineInfo.seatsConfig.FIRST.min + 1)) + airlineInfo.seatsConfig.FIRST.min : 0;
             
             // Calculate total available seats
-            const totalSeats = seatsEconomy + seatsPremiumEconomy + seatsBusiness + seatsFirst;
+            const totalSeats = seatsEconomy + seatsBusiness;
             
             let flightAvailableClasses = [...airlineInfo.classes].sort(() => 0.5 - Math.random())
                 .slice(0, Math.floor(Math.random() * airlineInfo.classes.length) + 1);
@@ -2194,13 +2122,9 @@ async function populateSampleFlights() {
                 arrivalDateTime.toISOString(),
                 durationStr,
                 economyPrice,
-                premiumEconomyPrice,
                 businessPrice,
-                firstPrice,
                 seatsEconomy,
-                seatsPremiumEconomy,
                 seatsBusiness,
-                seatsFirst,
                 totalSeats,
                 'scheduled',
                 availableClassesString
@@ -3166,14 +3090,8 @@ app.post('/api/bookings/:id/cancel', async (req, res) => {
         // Determine which seat field to update based on the seat class
         let seatField;
         switch(seatClass) {
-            case 'PREMIUM_ECONOMY':
-                seatField = 'seats_premium_economy';
-                break;
             case 'BUSINESS':
                 seatField = 'seats_business';
-                break;
-            case 'FIRST':
-                seatField = 'seats_first';
                 break;
             case 'ECONOMY':
             default:

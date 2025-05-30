@@ -303,21 +303,9 @@
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input available-class" type="checkbox" value="PREMIUM_ECONOMY" id="premium-economy-class">
-                                    <label class="form-check-label" for="premium-economy-class">
-                                        Phổ thông đặc biệt
-                                    </label>
-                                </div>
-                                <div class="form-check">
                                     <input class="form-check-input available-class" type="checkbox" value="BUSINESS" id="business-class">
                                     <label class="form-check-label" for="business-class">
                                         Thương gia
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input available-class" type="checkbox" value="FIRST" id="first-class">
-                                    <label class="form-check-label" for="first-class">
-                                        Thương gia hạng nhất
                                     </label>
                                 </div>
                             </div>
@@ -329,17 +317,9 @@
                                     <label for="economy-seats" class="form-label">Ghế phổ thông</label>
                                     <input type="number" class="form-control seat-input" id="economy-seats" min="0" required>
                                 </div>
-                                <div class="col-md-3 mb-2" id="premium-seats-container" style="display: none;">
-                                    <label for="premium-seats" class="form-label">Ghế phổ thông đặc biệt</label>
-                                    <input type="number" class="form-control seat-input" id="premium-seats" min="0">
-                                </div>
                                 <div class="col-md-3 mb-2" id="business-seats-container" style="display: none;">
                                     <label for="business-seats" class="form-label">Ghế thương gia</label>
                                     <input type="number" class="form-control seat-input" id="business-seats" min="0">
-                                </div>
-                                <div class="col-md-3 mb-2" id="first-seats-container" style="display: none;">
-                                    <label for="first-seats" class="form-label">Ghế hạng nhất</label>
-                                    <input type="number" class="form-control seat-input" id="first-seats" min="0">
                                 </div>
                             </div>
                         </div>
@@ -380,14 +360,10 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Get references to checkboxes and seat input containers
             const economyCheck = document.getElementById('economy-class');
-            const premiumCheck = document.getElementById('premium-economy-class');
             const businessCheck = document.getElementById('business-class');
-            const firstCheck = document.getElementById('first-class');
             
             const economySeats = document.getElementById('economy-seats-container');
-            const premiumSeats = document.getElementById('premium-seats-container');
             const businessSeats = document.getElementById('business-seats-container');
-            const firstSeats = document.getElementById('first-seats-container');
             
             // Add event listeners to checkboxes
             economyCheck.addEventListener('change', function() {
@@ -396,15 +372,6 @@
                     document.getElementById('economy-seats').setAttribute('required', 'required');
                 } else {
                     document.getElementById('economy-seats').removeAttribute('required');
-                }
-            });
-            
-            premiumCheck.addEventListener('change', function() {
-                premiumSeats.style.display = this.checked ? 'block' : 'none';
-                if (this.checked) {
-                    document.getElementById('premium-seats').setAttribute('required', 'required');
-                } else {
-                    document.getElementById('premium-seats').removeAttribute('required');
                 }
             });
             
@@ -417,26 +384,13 @@
                 }
             });
             
-            firstCheck.addEventListener('change', function() {
-                firstSeats.style.display = this.checked ? 'block' : 'none';
-                if (this.checked) {
-                    document.getElementById('first-seats').setAttribute('required', 'required');
-                } else {
-                    document.getElementById('first-seats').removeAttribute('required');
-                }
-            });
-            
             // Initialize visibility based on initial checkbox states
             economySeats.style.display = economyCheck.checked ? 'block' : 'none';
-            premiumSeats.style.display = premiumCheck.checked ? 'block' : 'none';
             businessSeats.style.display = businessCheck.checked ? 'block' : 'none';
-            firstSeats.style.display = firstCheck.checked ? 'block' : 'none';
             
             // Set required attribute based on initial checkbox states
             if (economyCheck.checked) document.getElementById('economy-seats').setAttribute('required', 'required');
-            if (premiumCheck.checked) document.getElementById('premium-seats').setAttribute('required', 'required');
             if (businessCheck.checked) document.getElementById('business-seats').setAttribute('required', 'required');
-            if (firstCheck.checked) document.getElementById('first-seats').setAttribute('required', 'required');
         });
     </script>
 </body>
