@@ -225,114 +225,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Display bookings
     const displayBookings = (bookings) => {
+        bookingsList.innerHTML = '';
+        
         if (bookings.length === 0) {
-            bookingsList.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-ticket-alt"></i>
-                    <p>Bạn chưa có đặt chỗ nào</p>
-                    <a href="../../index.html" class="btn-primary">Tìm chuyến bay</a>
-                </div>
-            `;
+            showNoBookings();
             return;
         }
         
-        bookingsList.innerHTML = '';
-        
         bookings.forEach(booking => {
-            // Check if departure time is within 3 hours
-            let isWithin3Hours = false;
-            let timeUntilDeparture = '';
-            let departureTime = '';
-            
-            if (booking.departureFlight && booking.departureFlight.departure_time) {
-                const departureDate = new Date(booking.departureFlight.departure_time);
-                departureTime = formatDate(departureDate);
-                const now = new Date();
-                const timeDiff = departureDate.getTime() - now.getTime();
-                const hoursDiff = timeDiff / (1000 * 60 * 60);
-                
-                if (hoursDiff < 3 && hoursDiff > 0) {
-                    isWithin3Hours = true;
-                    const hours = Math.floor(hoursDiff);
-                    const minutes = Math.floor((hoursDiff - hours) * 60);
-                    timeUntilDeparture = `${hours}h ${minutes}m`;
-                }
-            }
-            
-            const card = document.createElement('div');
-            card.className = 'booking-card';
-            
-            // Format the date
-            let bookingDate = 'N/A';
-            if (booking.booking_time) {
-                bookingDate = formatDate(booking.booking_time);
-            }
-            
-            // Get airport names
-            const departureAirport = booking.departureFlight ? getAirportName(booking.departureFlight.departure) : 'N/A';
-            const arrivalAirport = booking.departureFlight ? getAirportName(booking.departureFlight.destination) : 'N/A';
-            
-            // Format status badge
-            const statusClass = getStatusClass(booking.payment_status);
-            const statusText = getStatusText(booking.payment_status);
-            
-            // Determine if cancel button should be shown
-            const showCancelButton = booking.payment_status !== 'cancelled' && !isWithin3Hours;
-            
-            card.innerHTML = `
-                <div class="booking-header">
-                    <div class="booking-ref">
-                        <span class="label">Mã đặt chỗ</span>
-                        <span class="value">${booking.booking_id}</span>
-                    </div>
-                    <div class="booking-date">
-                        <span class="label">Ngày đặt</span>
-                        <span class="value">${bookingDate}</span>
-                    </div>
-                    <div class="booking-status">
-                        <span class="status-badge ${statusClass}">${statusText}</span>
-                    </div>
-                </div>
-                <div class="booking-content">
-                    <div class="flight-info">
-                        <div class="route">
-                            <span class="departure">${departureAirport}</span>
-                            <i class="fas fa-plane"></i>
-                            <span class="arrival">${arrivalAirport}</span>
-                        </div>
-                        <div class="departure-time">
-                            <span class="label">Khởi hành</span>
-                            <span class="value">${departureTime}</span>
-                            ${isWithin3Hours ? `<span class="time-warning">Còn ${timeUntilDeparture}</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="booking-price">
-                        <span class="label">Tổng tiền</span>
-                        <span class="value">${formatCurrency(booking.total_amount)}</span>
-                    </div>
-                </div>
-                <div class="booking-actions">
-                    <a href="booking-details.html?id=${booking.booking_id}" class="btn-secondary">
-                        <i class="fas fa-info-circle"></i> Chi tiết
-                    </a>
-                    ${showCancelButton ? `
-                        <button class="btn-danger cancel-booking" data-id="${booking.booking_id}">
-                            <i class="fas fa-times"></i> Hủy đặt chỗ
-                        </button>
-                    ` : isWithin3Hours && booking.payment_status !== 'cancelled' ? `
-                        <button class="btn-danger disabled" disabled title="Không thể hủy vé trong vòng 3 giờ trước khi khởi hành">
-                            <i class="fas fa-clock"></i> Không thể hủy
-                        </button>
-                    ` : ''}
-                </div>
-            `;
-            
+            const card = createBookingCard(booking);
             bookingsList.appendChild(card);
         });
         
-        // Add cancel event listeners
-        document.querySelectorAll('.cancel-booking').forEach(btn => {
-            btn.addEventListener('click', () => cancelBooking(btn.dataset.id));
+        bookingsList.style.display = 'block';
+        noBookings.style.display = 'none';
+        
+        // Add event listeners to buttons
+        document.querySelectorAll('.btn-view').forEach(btn => {
+            btn.addEventListener('click', () => viewBooking(btn.dataset.bookingId));
+        });
+        
+        document.querySelectorAll('.btn-cancel').forEach(btn => {
+            btn.addEventListener('click', () => cancelBooking(btn.dataset.bookingId));
         });
     };
     
@@ -425,18 +339,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert('Hủy đặt chỗ thành công!');
                 fetchUserBookings(); // Refresh bookings list
             } else {
-                // Check for time restriction error
-                if (data.error && data.error.includes('Flight departs in less than 3 hours')) {
-                    // Format the remaining time nicely
-                    let timeMessage = '';
-                    if (data.hoursRemaining) {
-                        const hours = Math.floor(data.hoursRemaining);
-                        const minutes = Math.floor((data.hoursRemaining - hours) * 60);
-                        timeMessage = ` Thời gian còn lại đến giờ bay: ${hours} giờ ${minutes} phút.`;
+                if (data.error && data.error.includes('3 giờ')) {
+                    // Special handling for the 3-hour restriction
+                    let errorMessage = 'Không thể hủy chuyến bay. Chuyến bay chỉ có thể được hủy trước giờ khởi hành ít nhất 3 giờ.';
+                    
+                    if (data.hoursRemaining !== undefined) {
+                        const hoursLeft = Math.max(0, parseFloat(data.hoursRemaining).toFixed(1));
+                        errorMessage += `\n\nThời gian còn lại đến giờ khởi hành: ${hoursLeft} giờ.`;
                     }
                     
-                    alert('Không thể hủy đặt chỗ. Chuyến bay khởi hành trong vòng 3 giờ tới.' + timeMessage + 
-                          '\nChỉ có thể hủy chuyến bay trước thời gian khởi hành ít nhất 3 giờ.');
+                    alert(errorMessage);
                 } else {
                     alert(data.error || 'Không thể hủy đặt chỗ. Vui lòng thử lại sau.');
                 }

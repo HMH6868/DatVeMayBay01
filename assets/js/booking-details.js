@@ -542,9 +542,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Display flights
         flightsContainer.innerHTML = '';
-        booking.flights.forEach((flight, index) => {
-            const flightCard = createFlightCard(flight);
-            flightsContainer.appendChild(flightCard);
+        booking.flights.forEach(flight => {
+            const card = createFlightCard(flight);
+            flightsContainer.appendChild(card);
         });
         
         // Display passengers
@@ -613,46 +613,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         priceDetailsEl.appendChild(createPriceDetails(booking));
         totalPriceEl.textContent = formatCurrency(booking.totalPrice);
         
-        // Check if we can show the cancel button based on departure time
-        let canCancel = booking.status.toLowerCase() !== 'cancelled';
-        let timeUntilDeparture = '';
-        let cancellationNote = '';
-        
-        // Check if flight is within 3 hours of departure
-        if (booking.flights && booking.flights.length > 0) {
-            const departureTime = new Date(booking.flights[0].departureTime);
-            const now = new Date();
-            const timeDiff = departureTime.getTime() - now.getTime();
-            const hoursDiff = timeDiff / (1000 * 60 * 60);
-            
-            if (hoursDiff < 3 && hoursDiff > 0) {
-                canCancel = false;
-                const hours = Math.floor(hoursDiff);
-                const minutes = Math.floor((hoursDiff - hours) * 60);
-                timeUntilDeparture = `${hours} giờ ${minutes} phút`;
-                cancellationNote = `Không thể hủy vé. Chuyến bay sẽ khởi hành trong ${timeUntilDeparture} nữa. Chỉ có thể hủy chuyến bay trước khi khởi hành ít nhất 3 giờ.`;
-            } else if (hoursDiff > 3) {
-                cancellationNote = 'Lưu ý: Chỉ có thể hủy chuyến bay trước khi khởi hành ít nhất 3 giờ.';
-            }
-        }
-        
-        // Show/hide the cancel button based on booking status and time
-        if (canCancel) {
+        // Show cancel button if booking is not cancelled
+        if (booking.status.toLowerCase() !== 'cancelled') {
             btnCancel.style.display = 'inline-block';
         } else {
             btnCancel.style.display = 'none';
-            
-            // If within 3 hours but not cancelled, show disabled button with explanation
-            if (timeUntilDeparture && booking.status.toLowerCase() !== 'cancelled') {
-                const disabledBtn = document.createElement('button');
-                disabledBtn.className = 'btn-danger disabled';
-                disabledBtn.disabled = true;
-                disabledBtn.innerHTML = '<i class="fas fa-clock"></i> Không thể hủy';
-                disabledBtn.title = 'Không thể hủy vé trong vòng 3 giờ trước khi khởi hành';
-                
-                // Replace cancel button with disabled one
-                btnCancel.parentNode.insertBefore(disabledBtn, btnCancel);
-            }
         }
 
         // Hide print button if booking is cancelled
@@ -664,19 +629,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Show booking details
         bookingDetails.style.display = 'block';
-
-        // Add cancellation policy note if applicable
-        if (cancellationNote) {
-            const noteElement = document.createElement('div');
-            noteElement.className = 'cancellation-note';
-            noteElement.innerHTML = `<i class="fas fa-info-circle"></i> ${cancellationNote}`;
-            
-            if (timeUntilDeparture) {
-                noteElement.classList.add('warning');
-            }
-            
-            bookingDetails.insertBefore(noteElement, document.querySelector('.actions-container'));
-        }
     };
     
     // Cancel booking
@@ -712,18 +664,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 console.error('Error cancelling booking:', data);
                 
-                // Check for time restriction error
-                if (data.error && data.error.includes('Flight departs in less than 3 hours')) {
-                    // Format the remaining time nicely
-                    let timeMessage = '';
-                    if (data.hoursRemaining) {
-                        const hours = Math.floor(data.hoursRemaining);
-                        const minutes = Math.floor((data.hoursRemaining - hours) * 60);
-                        timeMessage = ` Thời gian còn lại đến giờ bay: ${hours} giờ ${minutes} phút.`;
+                if (data.error && data.error.includes('3 giờ')) {
+                    // Special handling for the 3-hour restriction
+                    let errorMessage = 'Không thể hủy chuyến bay. Chuyến bay chỉ có thể được hủy trước giờ khởi hành ít nhất 3 giờ.';
+                    
+                    if (data.hoursRemaining !== undefined) {
+                        const hoursLeft = Math.max(0, parseFloat(data.hoursRemaining).toFixed(1));
+                        errorMessage += `\n\nThời gian còn lại đến giờ khởi hành: ${hoursLeft} giờ.`;
                     }
                     
-                    alert('Không thể hủy đặt chỗ. Chuyến bay khởi hành trong vòng 3 giờ tới.' + timeMessage + 
-                          '\nChỉ có thể hủy chuyến bay trước thời gian khởi hành ít nhất 3 giờ.');
+                    alert(errorMessage);
                 } else {
                     alert(data.error || 'Không thể hủy đặt chỗ. Vui lòng thử lại sau.');
                 }
