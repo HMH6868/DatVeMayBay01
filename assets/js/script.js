@@ -2529,7 +2529,7 @@ function loadPaymentSuccessPage() {
             console.log("Booking details:", data);
             
             // Display flight information
-            displayFlightInfoOnSuccessPage(data.flight);
+            displayFlightInfoOnSuccessPage(data);
             
             // Display passenger information
             displayPassengersOnSuccessPage(data.passengers);
@@ -2565,33 +2565,55 @@ function loadPaymentSuccessPage() {
 }
 
 // Display flight information on success page from API data
-function displayFlightInfoOnSuccessPage(flight) {
+function displayFlightInfoOnSuccessPage(data) {
     const flightInfo = document.getElementById('flight-info');
     if (!flightInfo) return;
+
+    const departureFlight = data.departureFlight;
+    const returnFlight = data.returnFlight;
+    const isRoundTrip = !!returnFlight;
+
+    if (!departureFlight) {
+        flightInfo.innerHTML = '<h3><i class="fas fa-plane-departure"></i> Thông tin chuyến bay</h3><div class="flight-details"><p>Không tìm thấy thông tin chuyến bay.</p></div>';
+        return;
+    }
     
-    flightInfo.innerHTML = `
-        <h3>Thông tin chuyến bay</h3>
-        <div class="info-row">
-            <div class="info-label">Chuyến bay:</div>
-            <div class="info-value">${flight.airline} (${flight.id})</div>
-        </div>
-        <div class="info-row">
-            <div class="info-label">Hành trình:</div>
-            <div class="info-value">${getAirportName(flight.departure)} → ${getAirportName(flight.destination)}</div>
-        </div>
-        <div class="info-row">
-            <div class="info-label">Ngày bay:</div>
-            <div class="info-value">${formatDate(flight.date)}</div>
-        </div>
-        <div class="info-row">
-            <div class="info-label">Giờ bay:</div>
-            <div class="info-value">${flight.departureTime} - ${flight.arrivalTime} (${flight.duration})</div>
-        </div>
-        <div class="info-row">
-            <div class="info-label">Trạng thái:</div>
-            <div class="info-value"><span class="status confirmed">Đã xác nhận</span></div>
+    let flightInfoHTML = `
+        <h3><i class="fas fa-plane-departure"></i> Thông tin chuyến bay</h3>
+    `;
+
+    // Departure flight
+    flightInfoHTML += `
+        <div class="flight-details-container">
+            ${isRoundTrip ? '<h4 style="margin-top: 15px; color: #0066cc;">CHUYẾN ĐI</h4>' : ''}
+            <div class="flight-details">
+                <p><strong>Chuyến bay:</strong> ${departureFlight.airline} (${departureFlight.id})</p>
+                <p><strong>Hành trình:</strong> ${getAirportName(departureFlight.departure)} → ${getAirportName(departureFlight.destination)}</p>
+                <p><strong>Ngày bay:</strong> ${formatDate(departureFlight.departure_time)}</p>
+                <p><strong>Giờ bay:</strong> ${departureFlight.departureTime} - ${departureFlight.arrivalTime} (${departureFlight.duration})</p>
+                <p><strong>Trạng thái:</strong> <span class="status-badge paid">Đã xác nhận</span></p>
+            </div>
         </div>
     `;
+
+    // Return flight
+    if (isRoundTrip) {
+        flightInfoHTML += `
+            <div class="divider"><i class="fas fa-plane"></i></div>
+            <div class="flight-details-container">
+                <h4 style="margin-top: 15px; color: #0066cc;">CHUYẾN VỀ</h4>
+                <div class="flight-details">
+                    <p><strong>Chuyến bay:</strong> ${returnFlight.airline} (${returnFlight.id})</p>
+                    <p><strong>Hành trình:</strong> ${getAirportName(returnFlight.departure)} → ${getAirportName(returnFlight.destination)}</p>
+                    <p><strong>Ngày bay:</strong> ${formatDate(returnFlight.departure_time)}</p>
+                    <p><strong>Giờ bay:</strong> ${returnFlight.departureTime} - ${returnFlight.arrivalTime} (${returnFlight.duration})</p>
+                    <p><strong>Trạng thái:</strong> <span class="status-badge paid">Đã xác nhận</span></p>
+                </div>
+            </div>
+        `;
+    }
+    
+    flightInfo.innerHTML = flightInfoHTML;
 }
 
 // Display flight information from sessionStorage as fallback
