@@ -68,6 +68,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return 'status-cancelled';
             case 'paid':
                 return 'status-paid';
+            case 'unpaid':
+                return 'status-unpaid';
             default:
                 return '';
         }
@@ -84,6 +86,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return 'Đã hủy';
             case 'paid':
                 return 'Đã thanh toán';
+            case 'unpaid':
+                return 'Chờ xác nhận';
             default:
                 return status;
         }
@@ -174,6 +178,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Create footer
         const footer = document.createElement('div');
         footer.className = 'booking-footer';
+
+        // Determine if the cancel button should be shown
+        const now = new Date();
+        const departureTime = new Date(outboundFlight.departureTime);
+        const canCancel = booking.status.toLowerCase() !== 'cancelled' && departureTime > now;
         
         // Add booking date and price
         footer.innerHTML = `
@@ -183,7 +192,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
             <div class="booking-actions">
                 <button class="btn-view" data-booking-id="${booking.id}">Xem chi tiết</button>
-                ${booking.status.toLowerCase() !== 'cancelled' ? 
+                ${canCancel ? 
                     `<button class="btn-cancel" data-booking-id="${booking.id}">Hủy đặt chỗ</button>` : ''}
             </div>
         `;
@@ -403,4 +412,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Start the application
     initialize();
-}); 
+});
