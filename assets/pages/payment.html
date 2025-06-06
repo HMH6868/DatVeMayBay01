@@ -1316,9 +1316,6 @@
                 const paymentDate = new Date().toISOString();
                 const totalAmountValue = finalAmount;
                 
-                // Xóa toàn bộ dữ liệu trong sessionStorage
-                sessionStorage.clear();
-                
                 // Chỉ lưu lại các thông tin cần thiết cho trang tiếp theo
                 sessionStorage.setItem('bookingId', bookingId);
                 sessionStorage.setItem('bookingNumber', bookingNumber);

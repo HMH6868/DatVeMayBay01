@@ -536,12 +536,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Ngăn chặn mọi hành động chuyển trang tự động
-            history.pushState(null, null, document.URL);
-            window.addEventListener('popstate', function () {
-                history.pushState(null, null, document.URL);
-            });
-            
             // Lấy booking ID từ URL hoặc sessionStorage
             const urlParams = new URLSearchParams(window.location.search);
             const bookingIdFromUrl = urlParams.get('booking_id');
