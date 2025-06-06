@@ -1819,6 +1819,58 @@ app.patch('/api/admin/bookings/:id/payment', async (req, res) => {
     }
 });
 
+// Admin API: Process a refund for a booking
+app.post('/api/admin/bookings/:id/refund', async (req, res) => {
+    try {
+        const bookingId = req.params.id;
+        const { refundAmount } = req.body;
+
+        if (!refundAmount || isNaN(refundAmount) || refundAmount <= 0) {
+            return res.status(400).json({ error: 'Invalid refund amount' });
+        }
+
+        // Get current booking information
+        const currentBooking = await db.get('SELECT * FROM bookings WHERE booking_id = ?', [bookingId]);
+
+        if (!currentBooking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        // Check if the booking is in a state that can be refunded
+        if (currentBooking.payment_status !== 'cancelled') {
+            return res.status(400).json({ error: 'Booking must be cancelled to be refunded' });
+        }
+        
+        if (currentBooking.payment_status === 'refunded') {
+            return res.status(400).json({ error: 'This booking has already been refunded' });
+        }
+
+        // Update booking status to 'refunded'
+        const result = await db.run(
+            "UPDATE bookings SET payment_status = 'refunded' WHERE booking_id = ?",
+            [bookingId]
+        );
+
+        if (result.changes === 0) {
+            return res.status(404).json({ error: 'Booking not found or status could not be updated' });
+        }
+
+        // Optionally, log the refund transaction somewhere
+        // For now, just updating the status is enough
+
+        res.json({
+            success: true,
+            message: 'Refund processed successfully',
+            bookingId: bookingId,
+            refundedAmount: refundAmount
+        });
+
+    } catch (error) {
+        console.error('Error processing refund:', error);
+        res.status(500).json({ error: 'Failed to process refund' });
+    }
+});
+
 // Helper function for assign seats removed
 
 // Admin API: Get booking statistics

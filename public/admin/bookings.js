@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPage = 1;
     let bookings = [];
     let currentBookingId = null;
+    let currentRefundAmount = 0;
     
     // Pagination settings
     const itemsPerPage = 10;
@@ -30,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resetFilterBtn.addEventListener('click', resetFilters);
         savePaymentStatusBtn.addEventListener('click', updatePaymentStatus);
         printBookingBtn.addEventListener('click', printBookingDetails);
+        document.getElementById('process-refund').addEventListener('click', processRefund);
         
         // Set default date range (last 30 days)
         const today = new Date();
@@ -142,6 +144,40 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error updating payment status:', error);
             showAlert('Không thể cập nhật trạng thái thanh toán. Vui lòng thử lại sau.', 'danger');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function processRefund() {
+        if (!currentBookingId || currentRefundAmount <= 0) {
+            showAlert('Không có thông tin hoàn tiền hoặc số tiền không hợp lệ.', 'warning');
+            return;
+        }
+
+        showLoading(true);
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/admin/bookings/${currentBookingId}/refund`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ refundAmount: currentRefundAmount })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to process refund');
+            }
+
+            showAlert('Hoàn tiền thành công!', 'success');
+            await loadBookingDetails(currentBookingId);
+            loadBookings(getFilterValues());
+
+        } catch (error) {
+            console.error('Error processing refund:', error);
+            showAlert(`Lỗi khi xử lý hoàn tiền: ${error.message}`, 'danger');
         } finally {
             showLoading(false);
         }
@@ -415,6 +451,43 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Set current payment status in select
         document.getElementById('update-payment-status').value = booking.payment_status;
+
+        // Handle refund section
+        const refundSection = document.getElementById('refund-section');
+        const processRefundContainer = document.getElementById('process-refund-container');
+        const refundMessage = document.getElementById('refund-message');
+
+        if ((booking.payment_status === 'cancelled' || booking.payment_status === 'refunded') && booking.should_refund) {
+            refundSection.style.display = 'block';
+            
+            const totalAmount = booking.total_amount;
+            let feeAmount = 0;
+            let refundAmountValue = totalAmount;
+
+            if (booking.cancelled_by_admin) {
+                refundMessage.textContent = 'Hoàn tiền 100% do hủy bởi quản trị viên.';
+            } else {
+                feeAmount = totalAmount * 0.2;
+                refundAmountValue = totalAmount * 0.8;
+                refundMessage.textContent = 'Hoàn tiền 80% do hủy bởi người dùng (phí hủy 20%).';
+            }
+
+            document.getElementById('refund-total-paid').textContent = formatCurrency(totalAmount);
+            document.getElementById('refund-cancellation-fee').textContent = formatCurrency(feeAmount);
+            document.getElementById('refund-amount-display').textContent = formatCurrency(refundAmountValue);
+            currentRefundAmount = refundAmountValue;
+
+            if (booking.payment_status === 'refunded') {
+                processRefundContainer.style.display = 'none';
+                refundMessage.textContent = 'Đã hoàn tiền thành công.';
+            } else {
+                processRefundContainer.style.display = 'block';
+            }
+
+        } else {
+            refundSection.style.display = 'none';
+            currentRefundAmount = 0;
+        }
         
         // Đã loại bỏ tính năng gán ghế
         const seatInfoEl = document.getElementById('seat-assignment-info');
@@ -793,4 +866,4 @@ document.addEventListener('DOMContentLoaded', function() {
             currency: 'VND'
         }).format(amount);
     }
-}); 
+});

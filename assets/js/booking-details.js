@@ -127,6 +127,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return 'status-pending';
         } else if (statusLower === 'cancelled') {
             return 'status-cancelled';
+        } else if (statusLower === 'refunded') {
+            return 'status-refunded';
         } else {
             return '';
         }
@@ -141,6 +143,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return 'Đang chờ';
         } else if (statusLower === 'cancelled') {
             return 'Đã hủy';
+        } else if (statusLower === 'refunded') {
+            return 'Đã hoàn tiền';
         } else {
             return status;
         }
@@ -568,6 +572,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             paymentStatusText = 'Đã thanh toán';
         } else if (booking.status.toLowerCase() === 'cancelled') {
             paymentStatusText = 'Đã hủy';
+        } else if (booking.status.toLowerCase() === 'refunded') {
+            paymentStatusText = 'Đã hoàn tiền';
         }
         paymentStatusEl.textContent = paymentStatusText;
         
@@ -581,7 +587,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const refundAmount = document.getElementById('refund-amount');
         const feeRow = document.getElementById('fee-row');
         
-        if (booking.status.toLowerCase() === 'cancelled' && booking.should_refund) {
+        const statusLower = booking.status.toLowerCase();
+        if ((statusLower === 'cancelled' || statusLower === 'refunded') && booking.should_refund) {
             // Calculate refund amounts
             const totalAmount = booking.totalPrice;
             let feeAmount = 0;
@@ -591,14 +598,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (booking.cancelled_by_admin) {
                 // 100% refund if cancelled by admin
                 feeRow.style.display = 'none';
-                refundMessage.textContent = 'Đặt vé của bạn đã bị hủy bởi hãng hàng không hoặc hệ thống. Bạn sẽ được hoàn lại 100% số tiền đã thanh toán trong vòng 24 giờ.';
+                refundMessage.textContent = 'Đặt vé của bạn đã bị hủy bởi hãng hàng không hoặc hệ thống. Bạn sẽ được hoàn lại 100% số tiền đã thanh toán.';
             } else {
                 // 80% refund if cancelled by user
                 feeAmount = totalAmount * 0.2;
                 refundAmountValue = totalAmount * 0.8;
                 feeRow.style.display = 'flex';
-                refundMessage.textContent = 'Đặt vé của bạn đã được hủy thành công. Bạn sẽ được hoàn lại 80% số tiền đã thanh toán trong vòng 24 giờ (phí hủy vé 20%).';
+                refundMessage.textContent = 'Đặt vé của bạn đã được hủy thành công. Bạn sẽ được hoàn lại 80% số tiền đã thanh toán (phí hủy vé 20%).';
                 cancellationFee.textContent = formatCurrency(feeAmount);
+            }
+
+            if (statusLower === 'refunded') {
+                refundMessage.textContent = 'Số tiền đã được hoàn lại thành công vào tài khoản của bạn.';
             }
             
             totalPaidAmount.textContent = formatCurrency(totalAmount);
@@ -613,15 +624,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         priceDetailsEl.appendChild(createPriceDetails(booking));
         totalPriceEl.textContent = formatCurrency(booking.totalPrice);
         
-        // Show cancel button if booking is not cancelled
-        if (booking.status.toLowerCase() !== 'cancelled') {
+        // Show cancel button if booking is not cancelled or refunded
+        if (!['cancelled', 'refunded'].includes(booking.status.toLowerCase())) {
             btnCancel.style.display = 'inline-block';
         } else {
             btnCancel.style.display = 'none';
         }
 
-        // Hide print button if booking is cancelled
-        if (booking.status.toLowerCase() === 'cancelled') {
+        // Hide print button if booking is cancelled or refunded
+        if (['cancelled', 'refunded'].includes(booking.status.toLowerCase())) {
             btnPrint.style.display = 'none';
         } else {
             btnPrint.style.display = 'inline-block';

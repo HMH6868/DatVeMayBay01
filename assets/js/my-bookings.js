@@ -70,6 +70,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return 'status-paid';
             case 'unpaid':
                 return 'status-unpaid';
+            case 'refunded':
+                return 'status-refunded';
             default:
                 return '';
         }
@@ -88,6 +90,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return 'Đã thanh toán';
             case 'unpaid':
                 return 'Chờ xác nhận';
+            case 'refunded':
+                return 'Đã hoàn tiền';
             default:
                 return status;
         }
@@ -182,7 +186,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Determine if the cancel button should be shown
         const now = new Date();
         const departureTime = new Date(outboundFlight.departureTime);
-        const canCancel = booking.status.toLowerCase() !== 'cancelled' && departureTime > now;
+        const canCancel = !['cancelled', 'refunded'].includes(booking.status.toLowerCase()) && departureTime > now;
         
         // Add booking date and price
         footer.innerHTML = `

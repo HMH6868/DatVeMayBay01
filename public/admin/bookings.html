@@ -376,6 +376,28 @@
                             <button id="save-payment-status" class="btn btn-primary">Cập nhật</button>
                         </div>
                     </div>
+
+                    <div id="refund-section" class="mt-4" style="display: none;">
+                        <h5>Thông tin hoàn tiền</h5>
+                        <p id="refund-message"></p>
+                        <table class="table">
+                            <tr>
+                                <th width="40%">Tổng tiền đã thanh toán:</th>
+                                <td id="refund-total-paid"></td>
+                            </tr>
+                            <tr>
+                                <th>Phí hủy đặt vé:</th>
+                                <td id="refund-cancellation-fee"></td>
+                            </tr>
+                            <tr>
+                                <th>Số tiền được hoàn trả:</th>
+                                <td id="refund-amount-display" class="fw-bold text-success"></td>
+                            </tr>
+                        </table>
+                        <div id="process-refund-container">
+                             <button id="process-refund" class="btn btn-success">Xử lý hoàn tiền</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
