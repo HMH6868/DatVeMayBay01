@@ -66,6 +66,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return 'status-pending';
             case 'cancelled':
                 return 'status-cancelled';
+            case 'paid':
+                return 'status-paid';
             default:
                 return '';
         }
@@ -80,6 +82,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return 'Đang chờ';
             case 'cancelled':
                 return 'Đã hủy';
+            case 'paid':
+                return 'Đã thanh toán';
             default:
                 return status;
         }
