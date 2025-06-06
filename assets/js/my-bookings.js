@@ -325,13 +325,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!sessionId) return;
         
         try {
+            // Show a loading indicator or disable the cancel button
+            const cancelBtn = document.querySelector(`.btn-cancel[data-booking-id="${bookingId}"]`);
+            if (cancelBtn) {
+                cancelBtn.disabled = true;
+                cancelBtn.textContent = 'Đang hủy...';
+            }
+            
+            // Set a timeout for the fetch request
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            
             const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/cancel`, {
                 method: 'POST',
                 headers: {
                     'Authorization': sessionId,
                     'Content-Type': 'application/json'
-                }
+                },
+                signal: controller.signal
             });
+            
+            clearTimeout(timeoutId);
             
             const data = await response.json();
             
@@ -339,6 +353,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert('Hủy đặt chỗ thành công!');
                 fetchUserBookings(); // Refresh bookings list
             } else {
+                console.error('Error response:', data);
+                
                 if (data.error && data.error.includes('3 giờ')) {
                     // Special handling for the 3-hour restriction
                     let errorMessage = 'Không thể hủy chuyến bay. Chuyến bay chỉ có thể được hủy trước giờ khởi hành ít nhất 3 giờ.';
@@ -355,7 +371,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (error) {
             console.error('Error cancelling booking:', error);
-            alert('Đã xảy ra lỗi khi kết nối đến máy chủ.');
+            
+            if (error.name === 'AbortError') {
+                alert('Yêu cầu hủy đặt chỗ đã hết thời gian chờ. Vui lòng thử lại sau.');
+            } else {
+                alert('Đã xảy ra lỗi khi hủy đặt chỗ: ' + (error.message || 'Lỗi kết nối'));
+            }
+        } finally {
+            // Re-enable the cancel button
+            const cancelBtn = document.querySelector(`.btn-cancel[data-booking-id="${bookingId}"]`);
+            if (cancelBtn) {
+                cancelBtn.disabled = false;
+                cancelBtn.textContent = 'Hủy đặt chỗ';
+            }
         }
     };
     

@@ -3140,7 +3140,7 @@ app.post('/api/bookings/:id/cancel', async (req, res) => {
         }
         
         // Check if the flight departure is at least 3 hours away
-        const departureTime = new Date(departureFlight.departure_date + ' ' + departureFlight.departure_time);
+        const departureTime = new Date(departureFlight.departure_time);
         const currentTime = new Date();
         const timeDiffMs = departureTime - currentTime;
         const timeDiffHours = timeDiffMs / (1000 * 60 * 60); // Convert milliseconds to hours
@@ -3148,7 +3148,7 @@ app.post('/api/bookings/:id/cancel', async (req, res) => {
         if (timeDiffHours < 3) {
             return res.status(400).json({ 
                 error: 'Không thể hủy chuyến bay. Chuyến bay chỉ có thể được hủy trước giờ khởi hành ít nhất 3 giờ.',
-                departureDatetime: departureFlight.departure_date + ' ' + departureFlight.departure_time,
+                departureDatetime: departureFlight.departure_time,
                 currentDatetime: currentTime,
                 hoursRemaining: timeDiffHours
             });
@@ -3201,7 +3201,7 @@ app.post('/api/bookings/:id/cancel', async (req, res) => {
         
         // Update booking status to cancelled and set the should_refund flag
         await db.run(
-            'UPDATE bookings SET payment_status = ?, should_refund = ?, cancelled_by_admin = ?, cancellation_time = CURRENT_TIMESTAMP WHERE booking_id = ?', 
+            'UPDATE bookings SET payment_status = ?, should_refund = ?, cancelled_by_admin = ? WHERE booking_id = ?', 
             ['cancelled', shouldRefund ? 1 : 0, 0, bookingId]
         );
         

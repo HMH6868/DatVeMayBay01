@@ -546,17 +546,25 @@
             const urlParams = new URLSearchParams(window.location.search);
             const bookingIdFromUrl = urlParams.get('booking_id');
             const bookingIdFromSession = sessionStorage.getItem('bookingId');
+            const viewBookingId = sessionStorage.getItem('viewBookingId');
             
-            const bookingId = bookingIdFromUrl || bookingIdFromSession;
+            const bookingId = bookingIdFromUrl || bookingIdFromSession || viewBookingId;
             
             if (bookingId) {
-                document.getElementById('booking-reference').textContent = bookingId;
+                // Update the booking reference display
+                const bookingReferenceElement = document.getElementById('booking-reference');
+                if (bookingReferenceElement) {
+                    bookingReferenceElement.textContent = bookingId;
+                }
+                
+                console.log("Using booking ID:", bookingId);
                 
                 // Tải thông tin đặt vé sau 1 giây để đảm bảo trang đã load hoàn toàn
                 setTimeout(() => {
-                loadBookingDetails(bookingId);
+                    loadBookingDetails(bookingId);
                 }, 1000);
             } else {
+                console.error("No booking ID found in URL or session storage");
                 showError("Không tìm thấy thông tin đặt vé", 
                     "Vui lòng quay lại trang chủ và thử lại.");
             }
@@ -570,6 +578,7 @@
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 10000);
                 
+                console.log("Fetching booking details for ID:", bookingId);
                 const response = await fetch(`http://localhost:3000/api/bookings/${bookingId}`, {
                     signal: controller.signal
                 }).catch(error => {
@@ -592,6 +601,12 @@
                     throw new Error('Dữ liệu không hợp lệ hoặc không có thông tin đặt vé');
                 }
                 
+                // Hiển thị lại mã booking để đảm bảo
+                const bookingReferenceElement = document.getElementById('booking-reference');
+                if (bookingReferenceElement) {
+                    bookingReferenceElement.textContent = data.booking.booking_id;
+                }
+                
                 // Kiểm tra trạng thái thanh toán
                 if (data.booking.payment_status !== 'paid') {
                     console.log('Trạng thái thanh toán:', data.booking.payment_status);
@@ -600,7 +615,7 @@
                         "Thanh toán chưa hoàn tất",
                         `Đơn hàng của bạn có trạng thái: <span class="status-badge ${data.booking.payment_status}">${formatPaymentStatus(data.booking.payment_status)}</span><br>
                         Vui lòng chờ xác nhận thanh toán hoặc liên hệ với chúng tôi nếu cần hỗ trợ.`,
-                        `<a href="payment-waiting.html?booking_id=${bookingId}" class="btn-primary">
+                        `<a href="payment-waiting.html?booking_id=${data.booking.booking_id}" class="btn-primary">
                             <i class="fas fa-sync-alt"></i> Kiểm tra trạng thái
                         </a>`
                     );
